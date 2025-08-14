@@ -1,0 +1,78 @@
+{
+    "network": {
+        "mode": "unicast",
+        "incremental_feed_a": {
+            "ip": "127.0.0.1",
+            "port": 14310
+        },
+        "incremental_feed_b": {
+            "ip": "127.0.0.1",
+            "port": 14311
+        },
+        "snapshot_feed": {
+            "ip": "127.0.0.1",
+            "port": 14320
+        },
+        "definition_feed": {
+            "ip": "127.0.0.1",
+            "port": 14330
+        }
+    },
+    "market_data": {
+        "snapshot_interval_seconds": 30,
+        "message_batch_size": 10,
+        "max_book_depth": 10,
+        "incremental_publish_interval_ms": 10
+    },
+    "instruments": [
+        {
+            "symbol": "ES",
+            "security_id": 1,
+            "name": "E-mini S&P 500",
+            "tick_size": 0.25,
+            "multiplier": 50,
+            "initial_price": 4500.00,
+            "initial_spread": 0.25,
+            "price_decimals": 2
+        },
+        {
+            "symbol": "NQ",
+            "security_id": 2,
+            "name": "E-mini NASDAQ-100",
+            "tick_size": 0.25,
+            "multiplier": 20,
+            "initial_price": 15500.00,
+            "initial_spread": 0.25,
+            "price_decimals": 2
+        },
+        {
+            "symbol": "CL",
+            "security_id": 3,
+            "name": "Crude Oil",
+            "tick_size": 0.01,
+            "multiplier": 1000,
+            "initial_price": 75.50,
+            "initial_spread": 0.01,
+            "price_decimals": 2
+        },
+        {
+            "symbol": "GC",
+            "security_id": 4,
+            "name": "Gold",
+            "tick_size": 0.10,
+            "multiplier": 100,
+            "initial_price": 1950.00,
+            "initial_spread": 0.10,
+            "price_decimals": 1
+        }
+    ],
+    "scenario": {
+        "type": "normal_market",
+        "volatility": "medium",
+        "message_rate": 100,
+        "duration_minutes": 60,
+        "price_drift": 0.0,
+        "spread_multiplier": 1.0,
+        "book_depth_target": 5
+    }
+}

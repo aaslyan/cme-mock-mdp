@@ -1,0 +1,43 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.exe
+
+# Compiled executables
+cme_mock_server
+cme_test_client
+debug_client
+debug_incremental
+test_udp_publisher
+udp_receiver
+test_order_book
+test_mdp_encoding
+test_reference_data
+simple_ref_test
+
+# Log files
+*.log
+receiver.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CMake generated files
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+
+# Temporary files
+*.tmp
+*.temp
