@@ -205,12 +205,18 @@ public:
 private:
     ReferenceDataManager() = default;
     
-    // Create default CME instruments
+    // Create default CME instruments (Channel 310 equity products)
     void create_default_instruments();
-    InstrumentDefinition create_es_future() const;
-    InstrumentDefinition create_nq_future() const;
-    InstrumentDefinition create_cl_future() const;
-    InstrumentDefinition create_gc_future() const;
+    InstrumentDefinition create_es_future() const;   // E-mini S&P 500
+    InstrumentDefinition create_nq_future() const;   // E-mini NASDAQ-100
+    InstrumentDefinition create_ym_future() const;   // E-mini Dow Jones
+    InstrumentDefinition create_rty_future() const;  // E-mini Russell 2000
+    InstrumentDefinition create_emd_future() const;  // E-mini S&P MidCap 400
+    InstrumentDefinition create_mes_future() const;  // Micro E-mini S&P 500
+    InstrumentDefinition create_mnq_future() const;  // Micro E-mini NASDAQ-100
+    InstrumentDefinition create_mym_future() const;  // Micro E-mini Dow Jones
+    InstrumentDefinition create_m2k_future() const;  // Micro E-mini Russell 2000
+    InstrumentDefinition create_vx_future() const;   // VIX Futures
     
     // Setup trading sessions
     void setup_default_sessions();

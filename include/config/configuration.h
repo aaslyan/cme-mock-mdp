@@ -31,24 +31,27 @@ struct InstrumentConfig {
     std::string symbol;
     uint32_t security_id;
     std::string name;
+    std::string underlying;
+    std::string exchange;
+    std::string product_group;
     double tick_size;
     double multiplier;
     double initial_price;
     double initial_spread;
     uint8_t price_decimals;
+    double contract_size;
+    double initial_margin;
+    double maintenance_margin;
+    std::string maturity_date;
 };
 
-enum class ScenarioType {
-    NormalMarket,
-    FastMarket,
-    ThinMarket,
-    OpeningAuction,
-    ClosingAuction,
-    TradingHalt
-};
+// Forward declaration - defined in scenarios/market_scenario.h
+enum class ScenarioType;
+struct ScenarioConfig;
 
-struct ScenarioConfig {
-    ScenarioType type = ScenarioType::NormalMarket;
+// Legacy scenario config for backward compatibility
+struct LegacyScenarioConfig {
+    std::string type = "normal";  // normal, fast, thin, recovery
     std::string volatility = "medium";  // low, medium, high
     uint32_t message_rate = 100;  // messages per second
     uint32_t duration_minutes = 60;
@@ -70,10 +73,10 @@ public:
     const NetworkConfig& network() const { return network_; }
     const MarketDataConfig& market_data() const { return market_data_; }
     const std::vector<InstrumentConfig>& instruments() const { return instruments_; }
-    const ScenarioConfig& scenario() const { return scenario_; }
+    const LegacyScenarioConfig& legacy_scenario() const { return legacy_scenario_; }
     
     // Setters for runtime updates
-    void set_scenario(const ScenarioConfig& scenario) { scenario_ = scenario; }
+    void set_legacy_scenario(const LegacyScenarioConfig& scenario) { legacy_scenario_ = scenario; }
     
 private:
     Configuration() = default;
@@ -81,7 +84,7 @@ private:
     NetworkConfig network_;
     MarketDataConfig market_data_;
     std::vector<InstrumentConfig> instruments_;
-    ScenarioConfig scenario_;
+    LegacyScenarioConfig legacy_scenario_;
 };
 
 } // namespace cme_mock

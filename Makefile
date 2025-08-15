@@ -15,7 +15,8 @@ LIB_SRCS = src/network/udp_publisher.cpp \
            src/messages/sbe_encoder.cpp \
            src/messages/sbe_decoder.cpp \
            src/messages/message_factory.cpp \
-           src/config/configuration.cpp
+           src/config/configuration.cpp \
+           src/scenarios/market_scenario.cpp
 
 # Test programs
 TEST_UDP_SRCS = test/test_udp_publisher.cpp
@@ -26,6 +27,8 @@ TEST_CLIENT_SRCS = test/cme_test_client.cpp
 DEBUG_CLIENT_SRCS = test/debug_client.cpp
 DEBUG_INC_SRCS = test/debug_incremental.cpp
 TEST_REF_DATA_SRCS = test/test_reference_data.cpp
+TEST_SCENARIOS_SRCS = test/test_scenarios.cpp
+LIST_INSTRUMENTS_SRCS = test/list_instruments.cpp
 
 # Object files
 LIB_OBJS = $(LIB_SRCS:.cpp=.o)
@@ -37,9 +40,11 @@ TEST_CLIENT_OBJS = $(TEST_CLIENT_SRCS:.cpp=.o)
 DEBUG_CLIENT_OBJS = $(DEBUG_CLIENT_SRCS:.cpp=.o)
 DEBUG_INC_OBJS = $(DEBUG_INC_SRCS:.cpp=.o)
 TEST_REF_DATA_OBJS = $(TEST_REF_DATA_SRCS:.cpp=.o)
+TEST_SCENARIOS_OBJS = $(TEST_SCENARIOS_SRCS:.cpp=.o)
+LIST_INSTRUMENTS_OBJS = $(LIST_INSTRUMENTS_SRCS:.cpp=.o)
 
 # Targets
-TARGETS = cme_mock_server cme_test_client debug_client debug_incremental test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data
+TARGETS = cme_mock_server cme_test_client debug_client debug_incremental test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data test_scenarios list_instruments
 
 all: $(TARGETS)
 
@@ -70,11 +75,17 @@ test_mdp_encoding: $(TEST_MDP_OBJS) $(LIB_OBJS)
 test_reference_data: $(TEST_REF_DATA_OBJS) $(LIB_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+test_scenarios: $(TEST_SCENARIOS_OBJS) $(LIB_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+list_instruments: $(LIST_INSTRUMENTS_OBJS) $(LIB_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(LIB_OBJS) $(TEST_UDP_OBJS) $(RECEIVER_OBJS) $(TEST_BOOK_OBJS) $(TEST_MDP_OBJS) $(TEST_CLIENT_OBJS) $(DEBUG_CLIENT_OBJS) $(DEBUG_INC_OBJS) $(TEST_REF_DATA_OBJS) src/main.o $(TARGETS)
+	rm -f $(LIB_OBJS) $(TEST_UDP_OBJS) $(RECEIVER_OBJS) $(TEST_BOOK_OBJS) $(TEST_MDP_OBJS) $(TEST_CLIENT_OBJS) $(DEBUG_CLIENT_OBJS) $(DEBUG_INC_OBJS) $(TEST_REF_DATA_OBJS) $(TEST_SCENARIOS_OBJS) $(LIST_INSTRUMENTS_OBJS) src/main.o $(TARGETS)
 
 test: all
 	@echo "Starting UDP receiver in background..."
