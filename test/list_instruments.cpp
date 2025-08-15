@@ -6,8 +6,8 @@
 using namespace cme_mock;
 
 int main() {
-    std::cout << "CME Channel 310 - Equity Index Futures Instruments" << std::endl;
-    std::cout << "==================================================" << std::endl;
+    std::cout << "CME Channels 310 & 330 - All Instruments" << std::endl;
+    std::cout << "=========================================" << std::endl;
     
     // Initialize logger
     Logger::instance().set_level(LogLevel::WARNING);  // Minimize log output
@@ -81,6 +81,22 @@ int main() {
             std::cout << "  Contract Size: $" << instrument->contract_size << " per index point" << std::endl;
             std::cout << "  Tick Value: $" << instrument->price_format.tick_value << std::endl;
             std::cout << "  Initial Margin: $" << instrument->risk_params.initial_margin << std::endl;
+        }
+    }
+    
+    std::cout << "\nFX Spot Plus Contracts (Channel 330):" << std::endl;
+    std::cout << "=====================================" << std::endl;
+    
+    std::vector<std::string> fx_symbols = {"EURUSD", "GBPUSD", "USDJPY", "USDCAD"};
+    
+    for (const auto& symbol : fx_symbols) {
+        const auto* instrument = ref_data.get_instrument(symbol);
+        if (instrument) {
+            std::cout << "\n" << instrument->symbol << " - " << instrument->name << std::endl;
+            std::cout << "  Tick Size: " << std::fixed << std::setprecision(5) << instrument->price_format.tick_size << std::endl;
+            std::cout << "  Initial Price: " << std::fixed << std::setprecision(5) << instrument->reference_price << std::endl;
+            std::cout << "  Initial Margin: $" << instrument->risk_params.initial_margin << std::endl;
+            std::cout << "  Underlying: " << instrument->underlying_symbol << std::endl;
         }
     }
     
