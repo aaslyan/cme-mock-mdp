@@ -14,6 +14,8 @@ udp_receiver
 test_order_book
 test_mdp_encoding
 test_reference_data
+test_scenarios
+list_instruments
 simple_ref_test
 
 # Log files
