@@ -116,6 +116,7 @@ bool MDPMessageDecoder::decode_snapshot_full_refresh(
     if (!decoder.can_read(4)) return false;
     uint16_t num_entries = decoder.decode_uint16();
     uint16_t entry_length = decoder.decode_uint16();
+    (void)entry_length;  // Suppress unused variable warning
     
     // Decode entries
     snapshot.entries.clear();
@@ -161,6 +162,7 @@ bool MDPMessageDecoder::decode_incremental_refresh(
     if (!decoder.can_read(4)) return false;
     uint16_t num_levels = decoder.decode_uint16();
     uint16_t level_length = decoder.decode_uint16();
+    (void)level_length;  // Suppress unused variable warning
     
     incremental.price_levels.clear();
     incremental.price_levels.reserve(num_levels);
@@ -177,6 +179,7 @@ bool MDPMessageDecoder::decode_incremental_refresh(
     if (!decoder.can_read(4)) return false;
     uint16_t num_trades = decoder.decode_uint16();
     uint16_t trade_length = decoder.decode_uint16();
+    (void)trade_length;  // Suppress unused variable warning
     
     incremental.trades.clear();
     incremental.trades.reserve(num_trades);

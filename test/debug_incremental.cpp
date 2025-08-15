@@ -73,10 +73,13 @@ void debug_incremental_decode(const std::vector<uint8_t>& data) {
         decoder.skip(2); // padding
         uint32_t security_id = decoder.decode_uint32();
         uint32_t rpt_seq = decoder.decode_uint32();
+        (void)rpt_seq;  // Suppress unused variable warning
         int64_t price = decoder.decode_int64();
         int32_t quantity = decoder.decode_int32();
         uint32_t num_orders = decoder.decode_uint32();
+        (void)num_orders;  // Suppress unused variable warning
         uint8_t price_level = decoder.decode_uint8();
+        (void)price_level;  // Suppress unused variable warning
         // No additional padding - 29 bytes total
         
         std::cout << "  ✓ Level " << i+1 << " - Action: " << (int)update_action

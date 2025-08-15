@@ -146,7 +146,7 @@ bool ReferenceDataManager::initialize() {
     return true;
 }
 
-bool ReferenceDataManager::load_from_config(const std::string& config_file) {
+bool ReferenceDataManager::load_from_config(const std::string& /* config_file */) {
     // For now, use the existing configuration system
     // This can be extended to load additional reference data from files
     return initialize();

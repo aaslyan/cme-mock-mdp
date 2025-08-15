@@ -105,7 +105,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.tick_size = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -118,7 +118,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.multiplier = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -131,7 +131,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.initial_price = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -144,7 +144,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.initial_spread = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -199,7 +199,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.contract_size = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -212,7 +212,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.initial_margin = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
@@ -225,7 +225,7 @@ bool Configuration::load_from_json(const std::string& json_content) {
                         while (num_start < instrument_obj.length() && (instrument_obj[num_start] == ' ' || instrument_obj[num_start] == ':')) num_start++;
                         size_t num_end = num_start;
                         while (num_end < instrument_obj.length() && 
-                               (instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9' || instrument_obj[num_end] == '.')) num_end++;
+                               ((instrument_obj[num_end] >= '0' && instrument_obj[num_end] <= '9') || instrument_obj[num_end] == '.')) num_end++;
                         if (num_end > num_start) {
                             instrument.maintenance_margin = std::stod(instrument_obj.substr(num_start, num_end - num_start));
                         }
