@@ -36,6 +36,11 @@ bool UDPReceiver::initialize()
         LOG_WARNING("Failed to set SO_REUSEADDR: " + std::string(strerror(errno)));
     }
 
+    // Set SO_REUSEPORT for multicast (allows multiple receivers)
+    if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable)) < 0) {
+        LOG_WARNING("Failed to set SO_REUSEPORT: " + std::string(strerror(errno)));
+    }
+
     // Bind to port
     struct sockaddr_in addr;
     std::memset(&addr, 0, sizeof(addr));
@@ -55,7 +60,27 @@ bool UDPReceiver::initialize()
         LOG_WARNING("Failed to set receive buffer size: " + std::string(strerror(errno)));
     }
 
-    LOG_INFO("UDP receiver initialized for port " + std::to_string(port_));
+    // Check if this is a multicast address and join the group
+    struct in_addr addr_check;
+    if (inet_pton(AF_INET, ip_address_.c_str(), &addr_check) > 0) {
+        uint32_t ip_host = ntohl(addr_check.s_addr);
+        if (ip_host >= 0xE0000000 && ip_host <= 0xEFFFFFFF) {
+            // This is a multicast address, join the multicast group
+            LOG_INFO("Joining multicast group: " + ip_address_);
+            
+            struct ip_mreq mreq;
+            mreq.imr_multiaddr.s_addr = addr_check.s_addr;
+            mreq.imr_interface.s_addr = INADDR_ANY;
+            
+            if (setsockopt(socket_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+                LOG_ERROR("Failed to join multicast group: " + std::string(strerror(errno)));
+                cleanup();
+                return false;
+            }
+        }
+    }
+
+    LOG_INFO("UDP receiver initialized for " + ip_address_ + ":" + std::to_string(port_));
     return true;
 }
 

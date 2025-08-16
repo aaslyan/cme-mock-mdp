@@ -387,10 +387,10 @@ int main(int argc, char* argv[])
     std::cout << "CME Test Client v1.0" << std::endl;
     std::cout << "====================" << std::endl;
 
-    // Default ports
-    std::string snapshot_ip = "127.0.0.1";
+    // Default multicast addresses for CME Channel 330
+    std::string snapshot_ip = "224.0.28.69";
     uint16_t snapshot_port = 14320;
-    std::string incremental_ip = "127.0.0.1";
+    std::string incremental_ip = "224.0.28.64";
     uint16_t incremental_port = 14310;
 
     // Parse command line arguments

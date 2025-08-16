@@ -46,13 +46,13 @@ bool UDPPublisher::initialize()
             LOG_INFO("Configuring multicast for address: " + ip_address_);
             
             // Set multicast TTL
-            unsigned char ttl = 1; // Local network only
+            unsigned char ttl = 64; // Allow routing through switches/routers
             if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
                 LOG_WARNING("Failed to set multicast TTL: " + std::string(strerror(errno)));
             }
             
-            // Disable multicast loopback
-            unsigned char loop = 0;
+            // Enable multicast loopback for local testing
+            unsigned char loop = 1;
             if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
                 LOG_WARNING("Failed to disable multicast loopback: " + std::string(strerror(errno)));
             }
