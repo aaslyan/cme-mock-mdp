@@ -69,28 +69,19 @@ void SnapshotFeedPublisher::publish_snapshot(uint32_t security_id)
 
 std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRefresh& snapshot)
 {
-    // Use CME SBE generated code for encoding
-    auto packet_header = CMESBEEncoder::encode_packet_header(
+    // Encode complete MDP packet with proper CME format
+    auto packet_header = MDPMessageEncoder::encode_packet_header(
         snapshot.header.sequence_number,
         snapshot.header.sending_time);
-
-    auto message = CMESBEEncoder::encode_snapshot_full_refresh(snapshot);
-
-    // Combine them with message size field
+    
+    auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
+    
+    // Combine packet header and message
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + 2 + message.size()); // +2 for message size
-
-    // Add packet header
+    result.reserve(packet_header.size() + message.size());
     result.insert(result.end(), packet_header.begin(), packet_header.end());
-
-    // Add message size field (uint16, little-endian)
-    uint16_t message_size = static_cast<uint16_t>(message.size());
-    result.push_back(message_size & 0xFF);
-    result.push_back((message_size >> 8) & 0xFF);
-
-    // Add message
     result.insert(result.end(), message.begin(), message.end());
-
+    
     return result;
 }
 
@@ -153,28 +144,19 @@ void IncrementalFeedPublisher::publish_batch(const IncrementalRefresh& update)
 
 std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const IncrementalRefresh& update)
 {
-    // Use CME SBE generated code for encoding
-    auto packet_header = CMESBEEncoder::encode_packet_header(
+    // Encode complete MDP packet with proper CME format
+    auto packet_header = MDPMessageEncoder::encode_packet_header(
         update.header.sequence_number,
         update.header.sending_time);
-
-    auto message = CMESBEEncoder::encode_incremental_refresh(update);
-
-    // Combine them with message size field
+    
+    auto message = MDPMessageEncoder::encode_incremental_refresh(update);
+    
+    // Combine packet header and message
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + 2 + message.size()); // +2 for message size
-
-    // Add packet header
+    result.reserve(packet_header.size() + message.size());
     result.insert(result.end(), packet_header.begin(), packet_header.end());
-
-    // Add message size field (uint16, little-endian)
-    uint16_t message_size = static_cast<uint16_t>(message.size());
-    result.push_back(message_size & 0xFF);
-    result.push_back((message_size >> 8) & 0xFF);
-
-    // Add message
     result.insert(result.end(), message.begin(), message.end());
-
+    
     return result;
 }
 
