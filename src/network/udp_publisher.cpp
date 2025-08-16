@@ -37,6 +37,28 @@ bool UDPPublisher::initialize()
         LOG_WARNING("Failed to set SO_REUSEADDR: " + std::string(strerror(errno)));
     }
 
+    // Check if this is a multicast address (224.0.0.0 to 239.255.255.255)
+    struct sockaddr_in addr;
+    if (inet_pton(AF_INET, ip_address_.c_str(), &addr.sin_addr) > 0) {
+        uint32_t ip_host = ntohl(addr.sin_addr.s_addr);
+        if (ip_host >= 0xE0000000 && ip_host <= 0xEFFFFFFF) {
+            // This is a multicast address, set multicast options
+            LOG_INFO("Configuring multicast for address: " + ip_address_);
+            
+            // Set multicast TTL
+            unsigned char ttl = 1; // Local network only
+            if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
+                LOG_WARNING("Failed to set multicast TTL: " + std::string(strerror(errno)));
+            }
+            
+            // Disable multicast loopback
+            unsigned char loop = 0;
+            if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {
+                LOG_WARNING("Failed to disable multicast loopback: " + std::string(strerror(errno)));
+            }
+        }
+    }
+
     // Set send buffer size for better performance
     int send_buffer_size = 1024 * 1024; // 1MB
     if (setsockopt(socket_fd_, SOL_SOCKET, SO_SNDBUF, &send_buffer_size, sizeof(send_buffer_size)) < 0) {

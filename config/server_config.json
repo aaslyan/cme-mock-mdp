@@ -1,16 +1,16 @@
 {
   "network": {
-    "mode": "unicast",
+    "mode": "multicast",
     "incremental_feed_a": {
-      "ip": "127.0.0.1",
+      "ip": "224.0.28.64",
       "port": 14310
     },
     "incremental_feed_b": {
-      "ip": "127.0.0.1",
+      "ip": "224.0.28.65",
       "port": 14311
     },
     "snapshot_feed": {
-      "ip": "127.0.0.1",
+      "ip": "224.0.28.69",
       "port": 14320
     },
     "definition_feed": {
