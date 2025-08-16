@@ -110,9 +110,9 @@ constexpr uint16_t TEMPLATE_INCREMENTAL_REFRESH_TRADE = 48;
 constexpr uint16_t TEMPLATE_SNAPSHOT_FULL_REFRESH = 52;
 
 // Template IDs for Schema Version 13 (FX Spot+ Channel 330)
-// Based on research: these are likely different in v13
-constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK = 0;
-constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_TRADE = 1;
+// Adjusted based on client feedback: client expects template ID 1 for incremental
+constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK = 1;
+constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_TRADE = 0;
 constexpr uint16_t TEMPLATE_FX_SNAPSHOT_FULL_REFRESH = 2;
 
 // Block lengths (simplified, actual lengths vary)
