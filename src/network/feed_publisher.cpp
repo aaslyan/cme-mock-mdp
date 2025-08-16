@@ -172,22 +172,63 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
         update.header.sequence_number,
         update.header.sending_time);
     
-    auto message = MDPMessageEncoder::encode_incremental_refresh(update);
-    
-    // Combine packet header + message size + message (as expected by client)
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + 2 + message.size());
+    result.reserve(1024); // Reserve space for efficiency
     
     // Add packet header
     result.insert(result.end(), packet_header.begin(), packet_header.end());
     
-    // Add message size (uint16_t, little-endian)
-    uint16_t message_size = static_cast<uint16_t>(message.size());
-    result.push_back(message_size & 0xFF);
-    result.push_back((message_size >> 8) & 0xFF);
+    // CME MDP 3.0 expects each update as a separate message with its own size field
+    // Instead of one message with multiple repeating groups, create individual messages
     
-    // Add SBE message
-    result.insert(result.end(), message.begin(), message.end());
+    // Process each price level as a separate message
+    for (const auto& level : update.price_levels) {
+        IncrementalRefresh single_update;
+        single_update.header = update.header;
+        single_update.transact_time = update.transact_time;
+        single_update.price_levels.push_back(level);
+        
+        auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
+        
+        // Add message size (uint16_t, little-endian)
+        uint16_t message_size = static_cast<uint16_t>(message.size());
+        result.push_back(message_size & 0xFF);
+        result.push_back((message_size >> 8) & 0xFF);
+        
+        // Add SBE message
+        result.insert(result.end(), message.begin(), message.end());
+    }
+    
+    // Process each trade as a separate message
+    for (const auto& trade : update.trades) {
+        IncrementalRefresh single_update;
+        single_update.header = update.header;
+        single_update.transact_time = update.transact_time;
+        single_update.trades.push_back(trade);
+        
+        auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
+        
+        // Add message size (uint16_t, little-endian)
+        uint16_t message_size = static_cast<uint16_t>(message.size());
+        result.push_back(message_size & 0xFF);
+        result.push_back((message_size >> 8) & 0xFF);
+        
+        // Add SBE message
+        result.insert(result.end(), message.begin(), message.end());
+    }
+    
+    // If no updates, create at least one empty message
+    if (update.price_levels.empty() && update.trades.empty()) {
+        auto message = MDPMessageEncoder::encode_incremental_refresh(update);
+        
+        // Add message size (uint16_t, little-endian)
+        uint16_t message_size = static_cast<uint16_t>(message.size());
+        result.push_back(message_size & 0xFF);
+        result.push_back((message_size >> 8) & 0xFF);
+        
+        // Add SBE message
+        result.insert(result.end(), message.begin(), message.end());
+    }
     
     return result;
 }
