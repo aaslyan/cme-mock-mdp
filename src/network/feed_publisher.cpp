@@ -76,10 +76,19 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
     // Then encode the message
     auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
 
-    // Combine them
+    // Combine them with message size field
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + message.size());
+    result.reserve(packet_header.size() + 2 + message.size()); // +2 for message size
+
+    // Add packet header
     result.insert(result.end(), packet_header.begin(), packet_header.end());
+
+    // Add message size field (uint16, little-endian)
+    uint16_t message_size = static_cast<uint16_t>(message.size());
+    result.push_back(message_size & 0xFF);
+    result.push_back((message_size >> 8) & 0xFF);
+
+    // Add message
     result.insert(result.end(), message.begin(), message.end());
 
     return result;
@@ -152,10 +161,19 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
     // Then encode the message
     auto message = MDPMessageEncoder::encode_incremental_refresh(update);
 
-    // Combine them
+    // Combine them with message size field
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + message.size());
+    result.reserve(packet_header.size() + 2 + message.size()); // +2 for message size
+
+    // Add packet header
     result.insert(result.end(), packet_header.begin(), packet_header.end());
+
+    // Add message size field (uint16, little-endian)
+    uint16_t message_size = static_cast<uint16_t>(message.size());
+    result.push_back(message_size & 0xFF);
+    result.push_back((message_size >> 8) & 0xFF);
+
+    // Add message
     result.insert(result.end(), message.begin(), message.end());
 
     return result;

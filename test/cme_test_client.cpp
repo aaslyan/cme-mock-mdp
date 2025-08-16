@@ -136,6 +136,14 @@ private:
             return;
         }
 
+        // Decode message size field (uint16)
+        if (!decoder.can_read(2)) {
+            std::cout << "Failed to decode message size field" << std::endl;
+            return;
+        }
+        uint16_t message_size = decoder.decode_uint16();
+        std::cout << "Message size: " << message_size << " bytes" << std::endl;
+
         // Decode message header
         uint16_t block_length, schema_id, version;
         uint16_t template_id = cme_mock::MDPMessageDecoder::decode_message_header(
@@ -182,6 +190,14 @@ private:
             std::cout << "Failed to decode packet header" << std::endl;
             return;
         }
+
+        // Decode message size field (uint16)
+        if (!decoder.can_read(2)) {
+            std::cout << "Failed to decode message size field" << std::endl;
+            return;
+        }
+        uint16_t message_size = decoder.decode_uint16();
+        std::cout << "Message size: " << message_size << " bytes" << std::endl;
 
         // Decode message header
         uint16_t block_length, schema_id, version;
