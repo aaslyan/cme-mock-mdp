@@ -1,12 +1,13 @@
+#include "core/order_book.h"
 #include "messages/mdp_messages.h"
 #include "messages/sbe_encoder.h"
-#include "core/order_book.h"
 #include <chrono>
 
 namespace cme_mock {
 
 // Helper function to get current timestamp in nanoseconds
-uint64_t get_timestamp_ns() {
+uint64_t get_timestamp_ns()
+{
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
@@ -16,20 +17,21 @@ uint64_t get_timestamp_ns() {
 SnapshotFullRefresh create_snapshot_from_book(
     const OrderBook& book,
     uint32_t last_seq_num,
-    uint32_t rpt_seq) {
-    
+    uint32_t rpt_seq)
+{
+
     SnapshotFullRefresh snapshot;
     snapshot.header.sequence_number = 0; // Set by publisher
     snapshot.header.sending_time = get_timestamp_ns();
     snapshot.header.msg_count = 1;
-    
+
     snapshot.security_id = book.get_security_id();
     snapshot.last_msg_seq_num_processed = last_seq_num;
     snapshot.rpt_seq = rpt_seq;
     snapshot.tot_num_reports = 1;
     snapshot.security_trading_status = 2; // Trading
     snapshot.transact_time = get_timestamp_ns();
-    
+
     // Add bid entries
     auto bids = book.get_bids(10);
     uint8_t level = 1;
@@ -42,7 +44,7 @@ SnapshotFullRefresh create_snapshot_from_book(
         entry.price_level = level++;
         snapshot.entries.push_back(entry);
     }
-    
+
     // Add ask entries
     auto asks = book.get_asks(10);
     level = 1;
@@ -55,7 +57,7 @@ SnapshotFullRefresh create_snapshot_from_book(
         entry.price_level = level++;
         snapshot.entries.push_back(entry);
     }
-    
+
     // Add trade entry if there's a last trade
     const auto& stats = book.get_stats();
     if (stats.last_price > 0) {
@@ -67,7 +69,7 @@ SnapshotFullRefresh create_snapshot_from_book(
         trade_entry.price_level = 0;
         snapshot.entries.push_back(trade_entry);
     }
-    
+
     return snapshot;
 }
 
@@ -79,14 +81,15 @@ IncrementalRefresh create_price_level_update(
     double price,
     int32_t quantity,
     uint8_t level,
-    uint32_t rpt_seq) {
-    
+    uint32_t rpt_seq)
+{
+
     IncrementalRefresh update;
     update.header.sequence_number = 0; // Set by publisher
     update.header.sending_time = get_timestamp_ns();
     update.header.msg_count = 1;
     update.transact_time = get_timestamp_ns();
-    
+
     MDPriceLevel price_level;
     price_level.update_action = action;
     price_level.entry_type = side;
@@ -96,9 +99,9 @@ IncrementalRefresh create_price_level_update(
     price_level.quantity = quantity;
     price_level.number_of_orders = 1; // Simplified
     price_level.price_level = level;
-    
+
     update.price_levels.push_back(price_level);
-    
+
     return update;
 }
 
@@ -108,14 +111,15 @@ IncrementalRefresh create_trade_update(
     double price,
     int32_t quantity,
     char aggressor_side,
-    uint32_t rpt_seq) {
-    
+    uint32_t rpt_seq)
+{
+
     IncrementalRefresh update;
     update.header.sequence_number = 0; // Set by publisher
     update.header.sending_time = get_timestamp_ns();
     update.header.msg_count = 1;
     update.transact_time = get_timestamp_ns();
-    
+
     MDTrade trade;
     trade.security_id = security_id;
     trade.rpt_seq = rpt_seq;
@@ -123,9 +127,9 @@ IncrementalRefresh create_trade_update(
     trade.quantity = quantity;
     trade.number_of_orders = 1; // Simplified
     trade.aggressor_side = aggressor_side;
-    
+
     update.trades.push_back(trade);
-    
+
     return update;
 }
 

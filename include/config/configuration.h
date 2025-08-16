@@ -1,23 +1,23 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 namespace cme_mock {
 
 struct NetworkConfig {
-    std::string mode = "unicast";  // unicast or multicast
-    
+    std::string mode = "unicast"; // unicast or multicast
+
     struct FeedConfig {
         std::string ip;
         uint16_t port;
     };
-    
-    FeedConfig incremental_feed_a = {"127.0.0.1", 14310};
-    FeedConfig incremental_feed_b = {"127.0.0.1", 14311};
-    FeedConfig snapshot_feed = {"127.0.0.1", 14320};
-    FeedConfig definition_feed = {"127.0.0.1", 14330};
+
+    FeedConfig incremental_feed_a = { "127.0.0.1", 14310 };
+    FeedConfig incremental_feed_b = { "127.0.0.1", 14311 };
+    FeedConfig snapshot_feed = { "127.0.0.1", 14320 };
+    FeedConfig definition_feed = { "127.0.0.1", 14330 };
 };
 
 struct MarketDataConfig {
@@ -51,36 +51,36 @@ struct ScenarioConfig;
 
 // Legacy scenario config for backward compatibility
 struct LegacyScenarioConfig {
-    std::string type = "normal";  // normal, fast, thin, recovery
-    std::string volatility = "medium";  // low, medium, high
-    uint32_t message_rate = 100;  // messages per second
+    std::string type = "normal"; // normal, fast, thin, recovery
+    std::string volatility = "medium"; // low, medium, high
+    uint32_t message_rate = 100; // messages per second
     uint32_t duration_minutes = 60;
-    
+
     // Market behavior parameters
-    double price_drift = 0.0;  // directional bias
-    double spread_multiplier = 1.0;  // wider spreads in fast markets
-    uint32_t book_depth_target = 5;  // target levels per side
+    double price_drift = 0.0; // directional bias
+    double spread_multiplier = 1.0; // wider spreads in fast markets
+    uint32_t book_depth_target = 5; // target levels per side
 };
 
 class Configuration {
 public:
     static Configuration& instance();
-    
+
     bool load_from_file(const std::string& filename);
     bool load_from_json(const std::string& json_content);
-    
+
     // Getters
     const NetworkConfig& network() const { return network_; }
     const MarketDataConfig& market_data() const { return market_data_; }
     const std::vector<InstrumentConfig>& instruments() const { return instruments_; }
     const LegacyScenarioConfig& legacy_scenario() const { return legacy_scenario_; }
-    
+
     // Setters for runtime updates
     void set_legacy_scenario(const LegacyScenarioConfig& scenario) { legacy_scenario_ = scenario; }
-    
+
 private:
     Configuration() = default;
-    
+
     NetworkConfig network_;
     MarketDataConfig market_data_;
     std::vector<InstrumentConfig> instruments_;

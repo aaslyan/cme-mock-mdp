@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <iostream>
-#include <fstream>
 #include <chrono>
+#include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
 
 namespace cme_mock {
 
@@ -18,29 +18,30 @@ enum class LogLevel {
 
 class Logger {
 public:
-    static Logger& instance() {
+    static Logger& instance()
+    {
         static Logger instance;
         return instance;
     }
-    
+
     void set_level(LogLevel level) { min_level_ = level; }
     void set_file(const std::string& filename);
-    
+
     void log(LogLevel level, const std::string& message);
-    
+
     // Convenience methods
     void debug(const std::string& msg) { log(LogLevel::DEBUG, msg); }
     void info(const std::string& msg) { log(LogLevel::INFO, msg); }
     void warning(const std::string& msg) { log(LogLevel::WARNING, msg); }
     void error(const std::string& msg) { log(LogLevel::ERROR, msg); }
     void critical(const std::string& msg) { log(LogLevel::CRITICAL, msg); }
-    
+
 private:
     Logger() = default;
-    
+
     LogLevel min_level_ = LogLevel::INFO;
     std::ofstream file_;
-    
+
     std::string level_to_string(LogLevel level);
     std::string get_timestamp();
 };

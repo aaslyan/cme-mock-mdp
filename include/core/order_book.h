@@ -1,10 +1,10 @@
 #pragma once
 
-#include <map>
-#include <vector>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace cme_mock {
 
@@ -49,21 +49,21 @@ public:
 
     // Trade operations
     void add_trade(double price, uint64_t quantity, char aggressor_side);
-    
+
     // Getters
     std::vector<PriceLevel> get_bids(size_t max_levels = 10) const;
     std::vector<PriceLevel> get_asks(size_t max_levels = 10) const;
     std::vector<Trade> get_recent_trades(size_t count = 10) const;
-    
+
     double get_best_bid() const;
     double get_best_ask() const;
     double get_mid_price() const;
     double get_spread() const;
-    
+
     const MarketStats& get_stats() const { return stats_; }
     uint32_t get_security_id() const { return security_id_; }
     const std::string& get_symbol() const { return symbol_; }
-    
+
     // State
     bool is_crossed() const;
     size_t bid_depth() const;
@@ -72,14 +72,14 @@ public:
 private:
     uint32_t security_id_;
     std::string symbol_;
-    
+
     // Using map for automatic price ordering
     std::map<double, PriceLevel, std::greater<double>> bids_; // Descending order
     std::map<double, PriceLevel> asks_; // Ascending order
-    
+
     std::vector<Trade> recent_trades_;
     MarketStats stats_;
-    
+
     void update_stats_on_trade(double price, uint64_t quantity);
 };
 

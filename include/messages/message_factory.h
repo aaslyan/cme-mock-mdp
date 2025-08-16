@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mdp_messages.h"
 #include "core/order_book.h"
+#include "mdp_messages.h"
 
 namespace cme_mock {
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace cme_mock {
 
@@ -11,16 +11,16 @@ enum class MDPMessageType : uint16_t {
     // Administrative Messages
     ChannelReset = 4,
     AdminHeartbeat = 12,
-    
+
     // Market Data Messages
     IncrementalRefreshBook = 46,
     IncrementalRefreshTrade = 48,
     IncrementalRefreshVolume = 37,
     IncrementalRefreshSessionStatistics = 51,
-    
+
     // Snapshot Messages
     SnapshotFullRefresh = 52,
-    
+
     // Security Definition
     SecurityDefinition = 39,
     SecurityStatus = 30
@@ -60,7 +60,7 @@ struct MDPriceLevel {
     MDEntryType entry_type;
     uint32_t security_id;
     uint32_t rpt_seq;
-    int64_t price;  // Scaled price (price * 10^price_decimals)
+    int64_t price; // Scaled price (price * 10^price_decimals)
     int32_t quantity;
     uint32_t number_of_orders;
     uint8_t price_level;

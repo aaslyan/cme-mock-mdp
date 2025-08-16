@@ -97,3 +97,6 @@ test: all
 	@pkill -f udp_receiver || true
 
 .PHONY: all clean test
+
+debug_snapshot_client: test/debug_snapshot_client.o $(LIB_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
