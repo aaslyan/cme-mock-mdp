@@ -548,7 +548,7 @@
       "maturity_date": "2025-03-19"
     },
     {
-      "symbol": "EURUSD",
+      "symbol": "EURUSDZ5031",
       "security_id": 31,
       "name": "EUR/USD FX Spot Plus",
       "underlying": "EUR/USD",
