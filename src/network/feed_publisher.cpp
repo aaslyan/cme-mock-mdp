@@ -1,6 +1,7 @@
 #include "network/feed_publisher.h"
 #include "messages/message_factory.h"
 #include "messages/sbe_encoder.h"
+#include "messages/cme_sbe_encoder.h"
 #include "utils/logger.h"
 #include <sstream>
 
@@ -68,13 +69,12 @@ void SnapshotFeedPublisher::publish_snapshot(uint32_t security_id)
 
 std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRefresh& snapshot)
 {
-    // First encode the packet header
-    auto packet_header = MDPMessageEncoder::encode_packet_header(
+    // Use CME SBE generated code for encoding
+    auto packet_header = CMESBEEncoder::encode_packet_header(
         snapshot.header.sequence_number,
         snapshot.header.sending_time);
 
-    // Then encode the message
-    auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
+    auto message = CMESBEEncoder::encode_snapshot_full_refresh(snapshot);
 
     // Combine them with message size field
     std::vector<uint8_t> result;
@@ -153,13 +153,12 @@ void IncrementalFeedPublisher::publish_batch(const IncrementalRefresh& update)
 
 std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const IncrementalRefresh& update)
 {
-    // First encode the packet header
-    auto packet_header = MDPMessageEncoder::encode_packet_header(
+    // Use CME SBE generated code for encoding
+    auto packet_header = CMESBEEncoder::encode_packet_header(
         update.header.sequence_number,
         update.header.sending_time);
 
-    // Then encode the message
-    auto message = MDPMessageEncoder::encode_incremental_refresh(update);
+    auto message = CMESBEEncoder::encode_incremental_refresh(update);
 
     // Combine them with message size field
     std::vector<uint8_t> result;

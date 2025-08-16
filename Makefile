@@ -14,6 +14,7 @@ LIB_SRCS = src/network/udp_publisher.cpp \
            src/core/reference_data.cpp \
            src/messages/sbe_encoder.cpp \
            src/messages/sbe_decoder.cpp \
+           src/messages/cme_sbe_encoder.cpp \
            src/messages/message_factory.cpp \
            src/config/configuration.cpp \
            src/scenarios/market_scenario.cpp
@@ -29,6 +30,7 @@ DEBUG_INC_SRCS = test/debug_incremental.cpp
 TEST_REF_DATA_SRCS = test/test_reference_data.cpp
 TEST_SCENARIOS_SRCS = test/test_scenarios.cpp
 LIST_INSTRUMENTS_SRCS = test/list_instruments.cpp
+TEST_SBE_SRCS = test/test_sbe_generated.cpp
 
 # Object files
 LIB_OBJS = $(LIB_SRCS:.cpp=.o)
@@ -42,9 +44,10 @@ DEBUG_INC_OBJS = $(DEBUG_INC_SRCS:.cpp=.o)
 TEST_REF_DATA_OBJS = $(TEST_REF_DATA_SRCS:.cpp=.o)
 TEST_SCENARIOS_OBJS = $(TEST_SCENARIOS_SRCS:.cpp=.o)
 LIST_INSTRUMENTS_OBJS = $(LIST_INSTRUMENTS_SRCS:.cpp=.o)
+TEST_SBE_OBJS = $(TEST_SBE_SRCS:.cpp=.o)
 
 # Targets
-TARGETS = cme_mock_server cme_test_client debug_client debug_incremental test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data test_scenarios list_instruments
+TARGETS = cme_mock_server cme_test_client debug_client debug_incremental test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data test_scenarios list_instruments test_sbe_generated
 
 all: $(TARGETS)
 
@@ -79,6 +82,9 @@ test_scenarios: $(TEST_SCENARIOS_OBJS) $(LIB_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 list_instruments: $(LIST_INSTRUMENTS_OBJS) $(LIB_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+test_sbe_generated: $(TEST_SBE_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 %.o: %.cpp
