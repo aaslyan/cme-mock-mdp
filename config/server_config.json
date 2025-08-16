@@ -565,7 +565,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "GBPUSD",
+      "symbol": "GBPUSDZ5031",
       "security_id": 32,
       "name": "GBP/USD FX Spot Plus",
       "underlying": "GBP/USD",
@@ -582,7 +582,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "AUDUSD",
+      "symbol": "AUDUSDZ5031",
       "security_id": 33,
       "name": "AUD/USD FX Spot Plus",
       "underlying": "AUD/USD",
@@ -599,7 +599,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "NZDUSD",
+      "symbol": "NZDUSDZ5031",
       "security_id": 34,
       "name": "NZD/USD FX Spot Plus",
       "underlying": "NZD/USD",
@@ -616,7 +616,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDJPY",
+      "symbol": "USDJPYZ5031",
       "security_id": 35,
       "name": "USD/JPY FX Spot Plus",
       "underlying": "USD/JPY",
@@ -633,7 +633,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDCAD",
+      "symbol": "USDCADZ5031",
       "security_id": 36,
       "name": "USD/CAD FX Spot Plus",
       "underlying": "USD/CAD",
@@ -650,7 +650,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDCHF",
+      "symbol": "USDCHFZ5031",
       "security_id": 37,
       "name": "USD/CHF FX Spot Plus",
       "underlying": "USD/CHF",
@@ -667,7 +667,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDMXN",
+      "symbol": "USDMXNZ5031",
       "security_id": 38,
       "name": "USD/MXN FX Spot Plus",
       "underlying": "USD/MXN",
@@ -684,7 +684,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDZAR",
+      "symbol": "USDZARZ5031",
       "security_id": 39,
       "name": "USD/ZAR FX Spot Plus",
       "underlying": "USD/ZAR",
@@ -701,7 +701,7 @@
       "maturity_date": "SPOT"
     },
     {
-      "symbol": "USDCNH",
+      "symbol": "USDCNHZ5031",
       "security_id": 40,
       "name": "USD/CNH FX Spot Plus",
       "underlying": "USD/CNH",
