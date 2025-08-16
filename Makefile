@@ -87,6 +87,9 @@ list_instruments: $(LIST_INSTRUMENTS_OBJS) $(LIB_OBJS)
 test_sbe_generated: $(TEST_SBE_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
+test_sbe_encoding: test/test_sbe_encoding.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
