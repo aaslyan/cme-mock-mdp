@@ -94,15 +94,26 @@ private:
 };
 
 // Constants for MDP 3.0
+// Schema Version 9 for traditional channels (310, etc.)
 constexpr uint16_t MDP_SCHEMA_ID = 1;
 constexpr uint16_t MDP_VERSION = 9;
 
-// Template IDs
+// Schema Version 13 for FX Spot+ Channel 330
+constexpr uint16_t MDP_SCHEMA_ID_FX = 1;
+constexpr uint16_t MDP_VERSION_FX = 13;
+
+// Template IDs for Schema Version 9 (traditional channels)
 constexpr uint16_t TEMPLATE_CHANNEL_RESET = 4;
 constexpr uint16_t TEMPLATE_ADMIN_HEARTBEAT = 12;
 constexpr uint16_t TEMPLATE_INCREMENTAL_REFRESH_BOOK = 46;
 constexpr uint16_t TEMPLATE_INCREMENTAL_REFRESH_TRADE = 48;
 constexpr uint16_t TEMPLATE_SNAPSHOT_FULL_REFRESH = 52;
+
+// Template IDs for Schema Version 13 (FX Spot+ Channel 330)
+// Based on research: these are likely different in v13
+constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK = 0;
+constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_TRADE = 1;
+constexpr uint16_t TEMPLATE_FX_SNAPSHOT_FULL_REFRESH = 2;
 
 // Block lengths (simplified, actual lengths vary)
 constexpr uint16_t BLOCK_LENGTH_SNAPSHOT = 44;

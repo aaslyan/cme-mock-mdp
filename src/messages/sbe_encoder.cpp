@@ -114,9 +114,16 @@ std::vector<uint8_t> MDPMessageEncoder::encode_snapshot_full_refresh(
 
     SBEEncoder encoder;
 
+    // Determine if this is an FX instrument (Channel 330, security IDs 31-40)
+    bool is_fx_instrument = (snapshot.security_id >= 31 && snapshot.security_id <= 40);
+
+    // Use appropriate schema version and template ID
+    uint16_t template_id = is_fx_instrument ? TEMPLATE_FX_SNAPSHOT_FULL_REFRESH : TEMPLATE_SNAPSHOT_FULL_REFRESH;
+    uint16_t schema_id = is_fx_instrument ? MDP_SCHEMA_ID_FX : MDP_SCHEMA_ID;
+    uint16_t version = is_fx_instrument ? MDP_VERSION_FX : MDP_VERSION;
+
     // Message header
-    encode_message_header(encoder, TEMPLATE_SNAPSHOT_FULL_REFRESH,
-        MDP_SCHEMA_ID, MDP_VERSION, BLOCK_LENGTH_SNAPSHOT);
+    encode_message_header(encoder, template_id, schema_id, version, BLOCK_LENGTH_SNAPSHOT);
 
     // Message body
     encoder.encode_uint32(snapshot.security_id);
@@ -160,9 +167,30 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
 
     SBEEncoder encoder;
 
+    // Determine if this contains FX instruments (Channel 330, security IDs 31-40)
+    bool has_fx_instrument = false;
+    for (const auto& level : incremental.price_levels) {
+        if (level.security_id >= 31 && level.security_id <= 40) {
+            has_fx_instrument = true;
+            break;
+        }
+    }
+    if (!has_fx_instrument) {
+        for (const auto& trade : incremental.trades) {
+            if (trade.security_id >= 31 && trade.security_id <= 40) {
+                has_fx_instrument = true;
+                break;
+            }
+        }
+    }
+
+    // Use appropriate schema version and template ID
+    uint16_t template_id = has_fx_instrument ? TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK : TEMPLATE_INCREMENTAL_REFRESH_BOOK;
+    uint16_t schema_id = has_fx_instrument ? MDP_SCHEMA_ID_FX : MDP_SCHEMA_ID;
+    uint16_t version = has_fx_instrument ? MDP_VERSION_FX : MDP_VERSION;
+
     // Message header
-    encode_message_header(encoder, TEMPLATE_INCREMENTAL_REFRESH_BOOK,
-        MDP_SCHEMA_ID, MDP_VERSION, BLOCK_LENGTH_INCREMENTAL);
+    encode_message_header(encoder, template_id, schema_id, version, BLOCK_LENGTH_INCREMENTAL);
 
     // Message body
     encoder.encode_uint64(incremental.transact_time);

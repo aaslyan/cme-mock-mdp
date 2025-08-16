@@ -118,6 +118,13 @@ private:
     {
         std::cout << "\n[RAW MESSAGE] Snapshot received, size: " << data.size() << " bytes" << std::endl;
 
+        // Hex dump first 32 bytes for debugging
+        std::cout << "Hex dump: ";
+        for (size_t i = 0; i < std::min(size_t(32), data.size()); ++i) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)data[i] << " ";
+        }
+        std::cout << std::dec << std::endl;
+
         cme_mock::SBEDecoder decoder(data);
 
         // Decode packet header
@@ -138,7 +145,7 @@ private:
                   << ", Schema: " << schema_id << ", Version: " << version
                   << ", Block: " << block_length << std::endl;
 
-        if (template_id == cme_mock::TEMPLATE_SNAPSHOT_FULL_REFRESH) {
+        if (template_id == cme_mock::TEMPLATE_SNAPSHOT_FULL_REFRESH || template_id == cme_mock::TEMPLATE_FX_SNAPSHOT_FULL_REFRESH) {
             cme_mock::SnapshotFullRefresh snapshot;
             snapshot.header.sequence_number = seq_num;
             snapshot.header.sending_time = sending_time;
@@ -159,6 +166,13 @@ private:
     {
         std::cout << "\n[RAW MESSAGE] Incremental received, size: " << data.size() << " bytes" << std::endl;
 
+        // Hex dump first 32 bytes for debugging
+        std::cout << "Hex dump: ";
+        for (size_t i = 0; i < std::min(size_t(32), data.size()); ++i) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)data[i] << " ";
+        }
+        std::cout << std::dec << std::endl;
+
         cme_mock::SBEDecoder decoder(data);
 
         // Decode packet header
@@ -178,7 +192,7 @@ private:
                   << ", Schema: " << schema_id << ", Version: " << version
                   << ", Block: " << block_length << std::endl;
 
-        if (template_id == cme_mock::TEMPLATE_INCREMENTAL_REFRESH_BOOK) {
+        if (template_id == cme_mock::TEMPLATE_INCREMENTAL_REFRESH_BOOK || template_id == cme_mock::TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK || template_id == cme_mock::TEMPLATE_FX_INCREMENTAL_REFRESH_TRADE) {
             cme_mock::IncrementalRefresh incremental;
             incremental.header.sequence_number = seq_num;
             incremental.header.sending_time = sending_time;
