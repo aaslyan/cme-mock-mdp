@@ -55,6 +55,13 @@ void SnapshotFeedPublisher::publish_snapshot(uint32_t security_id)
     // Encode and send
     auto encoded = encode_snapshot(snapshot);
 
+    // Print hex data for debugging
+    std::cout << "SERVER SENDING SNAPSHOT (" << encoded.size() << " bytes): ";
+    for (size_t i = 0; i < std::min(encoded.size(), size_t(32)); ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (unsigned)encoded[i] << " ";
+    }
+    std::cout << std::dec << std::endl;
+
     if (udp_publisher_->send(encoded)) {
         std::stringstream ss;
         ss << "Sent snapshot for " << book->get_symbol()
@@ -97,6 +104,13 @@ void IncrementalFeedPublisher::publish_book_update(uint32_t security_id, const M
     update.price_levels.push_back(level);
 
     auto encoded = encode_incremental(update);
+
+    // Print hex data for debugging
+    std::cout << "SERVER SENDING INCREMENTAL (" << encoded.size() << " bytes): ";
+    for (size_t i = 0; i < std::min(encoded.size(), size_t(32)); ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (unsigned)encoded[i] << " ";
+    }
+    std::cout << std::dec << std::endl;
 
     if (udp_publisher_->send(encoded)) {
         LOG_DEBUG("Sent book update for security " + std::to_string(security_id));

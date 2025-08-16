@@ -117,10 +117,10 @@ std::vector<uint8_t> MDPMessageEncoder::encode_snapshot_full_refresh(
     // Determine if this is an FX instrument (Channel 330, security IDs 31-40)
     bool is_fx_instrument = (snapshot.security_id >= 31 && snapshot.security_id <= 40);
 
-    // Use appropriate schema version and template ID
-    uint16_t template_id = is_fx_instrument ? TEMPLATE_FX_SNAPSHOT_FULL_REFRESH : TEMPLATE_SNAPSHOT_FULL_REFRESH;
-    uint16_t schema_id = is_fx_instrument ? MDP_SCHEMA_ID_FX : MDP_SCHEMA_ID;
-    uint16_t version = is_fx_instrument ? MDP_VERSION_FX : MDP_VERSION;
+    // Force Schema Version 13 for all instruments to match gateway client expectations
+    uint16_t template_id = TEMPLATE_FX_SNAPSHOT_FULL_REFRESH; // Always use FX template (52)
+    uint16_t schema_id = MDP_SCHEMA_ID_FX; // Always use FX schema (1)
+    uint16_t version = MDP_VERSION_FX; // Always use FX version (13)
 
     // Message header
     encode_message_header(encoder, template_id, schema_id, version, BLOCK_LENGTH_SNAPSHOT);
@@ -184,10 +184,10 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
         }
     }
 
-    // Use appropriate schema version and template ID
-    uint16_t template_id = has_fx_instrument ? TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK : TEMPLATE_INCREMENTAL_REFRESH_BOOK;
-    uint16_t schema_id = has_fx_instrument ? MDP_SCHEMA_ID_FX : MDP_SCHEMA_ID;
-    uint16_t version = has_fx_instrument ? MDP_VERSION_FX : MDP_VERSION;
+    // Force Schema Version 13 for all instruments to match gateway client expectations
+    uint16_t template_id = TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK; // Always use FX template (46)
+    uint16_t schema_id = MDP_SCHEMA_ID_FX; // Always use FX schema (1)
+    uint16_t version = MDP_VERSION_FX; // Always use FX version (13)
 
     // Message header
     encode_message_header(encoder, template_id, schema_id, version, BLOCK_LENGTH_INCREMENTAL);
