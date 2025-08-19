@@ -169,55 +169,19 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
 {
     std::vector<char> buffer(1024);
 
-    // Step 1: Encode CME-specific SBE header (not standard SBE MessageHeader)
-    size_t offset = 0;
-
-    // Binary Size - will be filled in later after we know total size
-    size_t binary_size_offset = offset;
-    buffer[offset++] = 0; // placeholder
-    buffer[offset++] = 0; // placeholder
-
-    // Length (4 bytes) - SBE header size = 10 bytes
-    uint32_t sbe_header_length = 10;
-    buffer[offset++] = sbe_header_length & 0xFF;
-    buffer[offset++] = (sbe_header_length >> 8) & 0xFF;
-    buffer[offset++] = (sbe_header_length >> 16) & 0xFF;
-    buffer[offset++] = (sbe_header_length >> 24) & 0xFF;
-
-    // TemplateID (2 bytes)
-    uint16_t template_id = cme_sbe::MDIncrementalRefreshBook46::sbeTemplateId();
-    buffer[offset++] = template_id & 0xFF;
-    buffer[offset++] = (template_id >> 8) & 0xFF;
-
-    // SchemaID (2 bytes)
-    uint16_t schema_id = cme_sbe::MDIncrementalRefreshBook46::sbeSchemaId();
-    buffer[offset++] = schema_id & 0xFF;
-    buffer[offset++] = (schema_id >> 8) & 0xFF;
-
-    // Version (2 bytes)
-    uint16_t version = cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion();
-    buffer[offset++] = version & 0xFF;
-    buffer[offset++] = (version >> 8) & 0xFF;
-
-    size_t header_size = offset; // Should be 12 bytes (2 + 4 + 2 + 2 + 2)
-
-    // Step 2: Encode Message Body using CME SBE constructor
-    cme_sbe::MDIncrementalRefreshBook46 message(
-        buffer.data(),
-        header_size,
-        buffer.size(),
-        cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength(),
-        cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
-
+    // Use standard SBE format that the parser expects
+    cme_sbe::MDIncrementalRefreshBook46 message;
+    message.wrapAndApplyHeader(buffer.data(), 0, buffer.size());
+    
     // Set message fields
     message.transactTime(incremental.transact_time);
-
+    
     // Add price level entries
     auto& entries = message.noMDEntriesCount(static_cast<std::uint8_t>(incremental.price_levels.size()));
     for (size_t i = 0; i < incremental.price_levels.size(); ++i) {
         auto& entry = entries.next();
         const auto& level = incremental.price_levels[i];
-
+        
         entry.mDUpdateAction(static_cast<cme_sbe::MDUpdateAction::Value>(level.update_action));
         entry.mDEntryType(static_cast<cme_sbe::MDEntryTypeBook::Value>(level.entry_type));
         entry.securityID(level.security_id);
@@ -227,21 +191,13 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
         entry.numberOfOrders(level.number_of_orders);
         entry.mDPriceLevel(level.price_level);
     }
-
+    
     // Add empty Order ID entries group (required by CME specification)
     message.noOrderIDEntriesCount(0);
-
-    // Calculate total message size and fill in Binary Size field
-    size_t body_length = message.encodedLength() - header_size;
-    size_t total_length = header_size + body_length;
-
-    // Fill in Binary Size (total message size including header)
-    uint16_t binary_size = static_cast<uint16_t>(total_length);
-    buffer[binary_size_offset] = binary_size & 0xFF;
-    buffer[binary_size_offset + 1] = (binary_size >> 8) & 0xFF;
-
-    // Convert to uint8_t vector
-    std::vector<uint8_t> result(buffer.begin(), buffer.begin() + total_length);
+    
+    // Convert to uint8_t vector - standard SBE format
+    size_t total_size = message.encodedLength();
+    std::vector<uint8_t> result(buffer.begin(), buffer.begin() + total_size);
     return result;
 }
 
