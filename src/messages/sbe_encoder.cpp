@@ -81,14 +81,16 @@ void SBEEncoder::ensure_capacity(size_t required)
 // MDPMessageEncoder implementation
 std::vector<uint8_t> MDPMessageEncoder::encode_packet_header(
     uint32_t sequence_number,
-    uint64_t sending_time)
+    uint64_t sending_time,
+    uint16_t msg_count)
 {
 
     SBEEncoder encoder;
 
-    // Packet header (simplified)
-    encoder.encode_uint32(sequence_number);
-    encoder.encode_uint64(sending_time);
+    // CME MDP 3.0 Binary Packet Header (14 bytes total)
+    encoder.encode_uint32(sequence_number);  // Offset 0-3
+    encoder.encode_uint64(sending_time);     // Offset 4-11
+    encoder.encode_uint16(msg_count);        // Offset 12-13
 
     return encoder.get_buffer();
 }

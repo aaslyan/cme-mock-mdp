@@ -79,7 +79,8 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
     // Encode complete MDP packet with proper CME format
     auto packet_header = MDPMessageEncoder::encode_packet_header(
         snapshot.header.sequence_number,
-        snapshot.header.sending_time);
+        snapshot.header.sending_time,
+        snapshot.header.msg_count);
     
     auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
     

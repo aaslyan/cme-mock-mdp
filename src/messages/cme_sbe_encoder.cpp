@@ -12,7 +12,8 @@ bool CMESBEEncoder::is_fx_instrument(uint32_t security_id)
 
 std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
     uint32_t sequence_number,
-    uint64_t sending_time)
+    uint64_t sending_time,
+    uint16_t msg_count)
 {
     std::vector<uint8_t> buffer(14); // 4 + 8 + 2 bytes for complete MDP header
     
@@ -27,8 +28,7 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
         buffer[4 + i] = (sending_time >> (i * 8)) & 0xFF;
     }
     
-    // Encode msg_count (little-endian) - always 1 for single message packets
-    uint16_t msg_count = 1;
+    // Encode msg_count (little-endian) at offset 12
     buffer[12] = msg_count & 0xFF;
     buffer[13] = (msg_count >> 8) & 0xFF;
     

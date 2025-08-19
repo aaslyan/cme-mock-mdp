@@ -52,7 +52,8 @@ public:
     // Encode packet header
     static std::vector<uint8_t> encode_packet_header(
         uint32_t sequence_number,
-        uint64_t sending_time);
+        uint64_t sending_time,
+        uint16_t msg_count = 1);
 
     // Encode snapshot message
     static std::vector<uint8_t> encode_snapshot_full_refresh(
