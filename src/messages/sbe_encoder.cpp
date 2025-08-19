@@ -1,4 +1,7 @@
 #include "messages/sbe_encoder.h"
+#include "cme_sbe/MDIncrementalRefreshBook46.h"
+#include "cme_sbe/MessageHeader.h"
+#include "cme_sbe/SnapshotFullRefresh52.h"
 #include <algorithm>
 #include <cmath>
 
@@ -164,54 +167,53 @@ void MDPMessageEncoder::encode_snapshot_entry(
 std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
     const IncrementalRefresh& incremental)
 {
+    std::vector<char> buffer(1024);
 
-    SBEEncoder encoder;
+    // Step 1: Encode Message Header using CME SBE constructor
+    cme_sbe::MessageHeader header(
+        buffer.data(),
+        0,
+        buffer.size(),
+        cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
 
-    // Determine if this contains FX instruments (Channel 330, security IDs 31-40)
-    bool has_fx_instrument = false;
-    for (const auto& level : incremental.price_levels) {
-        if (level.security_id >= 31 && level.security_id <= 40) {
-            has_fx_instrument = true;
-            break;
-        }
-    }
-    if (!has_fx_instrument) {
-        for (const auto& trade : incremental.trades) {
-            if (trade.security_id >= 31 && trade.security_id <= 40) {
-                has_fx_instrument = true;
-                break;
-            }
-        }
-    }
+    header.blockLength(cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength())
+        .templateId(cme_sbe::MDIncrementalRefreshBook46::sbeTemplateId())
+        .schemaId(cme_sbe::MDIncrementalRefreshBook46::sbeSchemaId())
+        .version(cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
 
-    // Force Schema Version 13 for all instruments to match gateway client expectations
-    uint16_t template_id = TEMPLATE_FX_INCREMENTAL_REFRESH_BOOK; // Always use FX template (46)
-    uint16_t schema_id = MDP_SCHEMA_ID_FX; // Always use FX schema (1)
-    uint16_t version = MDP_VERSION_FX; // Always use FX version (13)
+    size_t header_size = header.encodedLength();
 
-    // Message header
-    encode_message_header(encoder, template_id, schema_id, version, BLOCK_LENGTH_INCREMENTAL);
+    // Step 2: Encode Message Body using CME SBE constructor
+    cme_sbe::MDIncrementalRefreshBook46 message(
+        buffer.data(),
+        header_size,
+        buffer.size(),
+        cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength(),
+        cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
 
-    // Message body
-    encoder.encode_uint64(incremental.transact_time);
+    // Set message fields
+    message.transactTime(incremental.transact_time);
 
-    // Price level entries
-    encoder.encode_uint16(static_cast<uint16_t>(incremental.price_levels.size()));
-    encoder.encode_uint16(29); // Entry block length (actual size)
+    // Add price level entries
+    auto& entries = message.noMDEntriesCount(static_cast<std::uint8_t>(incremental.price_levels.size()));
+    for (size_t i = 0; i < incremental.price_levels.size(); ++i) {
+        auto& entry = entries.next();
+        const auto& level = incremental.price_levels[i];
 
-    for (const auto& level : incremental.price_levels) {
-        encode_price_level(encoder, level);
-    }
-
-    // Trade entries
-    encoder.encode_uint16(static_cast<uint16_t>(incremental.trades.size()));
-    encoder.encode_uint16(32); // Trade block length
-
-    for (const auto& trade : incremental.trades) {
-        encode_trade(encoder, trade);
+        entry.mDUpdateAction(static_cast<cme_sbe::MDUpdateAction::Value>(level.update_action));
+        entry.mDEntryType(static_cast<cme_sbe::MDEntryTypeBook::Value>(level.entry_type));
+        entry.securityID(level.security_id);
+        entry.rptSeq(level.rpt_seq);
+        entry.mDEntryPx().mantissa(level.price);
+        entry.mDEntrySize(level.quantity);
+        entry.numberOfOrders(level.number_of_orders);
+        entry.mDPriceLevel(level.price_level);
     }
 
-    return encoder.get_buffer();
+    // Convert to uint8_t vector (header + message body)
+    size_t total_length = header_size + message.encodedLength();
+    std::vector<uint8_t> result(buffer.begin(), buffer.begin() + total_length);
+    return result;
 }
 
 void MDPMessageEncoder::encode_price_level(
