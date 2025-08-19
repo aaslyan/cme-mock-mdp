@@ -79,24 +79,28 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
     // Encode complete MDP packet with proper CME format
     auto packet_header = MDPMessageEncoder::encode_packet_header(
         snapshot.header.sequence_number,
-        snapshot.header.sending_time,
-        snapshot.header.msg_count);
+        snapshot.header.sending_time);
 
     auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
 
-    // Combine packet header + message size + message (as expected by client)
+    // Build complete packet: Binary Packet Header + Message Count + Message Size + SBE Message
     std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + 2 + message.size());
+    result.reserve(packet_header.size() + 2 + 2 + message.size());
 
-    // Add packet header
+    // 1. Add Binary Packet Header (12 bytes)
     result.insert(result.end(), packet_header.begin(), packet_header.end());
 
-    // Add message size (uint16_t, little-endian)
+    // 2. Add Message Count (2 bytes, little-endian) - always 1 for snapshots
+    uint16_t message_count = 1;
+    result.push_back(message_count & 0xFF);
+    result.push_back((message_count >> 8) & 0xFF);
+
+    // 3. Add Message Size (2 bytes, little-endian)
     uint16_t message_size = static_cast<uint16_t>(message.size());
     result.push_back(message_size & 0xFF);
     result.push_back((message_size >> 8) & 0xFF);
 
-    // Add SBE message
+    // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
     result.insert(result.end(), message.begin(), message.end());
 
     return result;
@@ -169,24 +173,25 @@ void IncrementalFeedPublisher::publish_batch(const IncrementalRefresh& update)
 std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const IncrementalRefresh& update)
 {
     // Encode complete MDP packet with proper CME format
-    // Count the number of messages we'll send
-    uint16_t message_count = update.price_levels.size() + update.trades.size();
-    if (message_count == 0) message_count = 1; // At least one empty message
-    
     auto packet_header = MDPMessageEncoder::encode_packet_header(
         update.header.sequence_number,
-        update.header.sending_time,
-        message_count);
+        update.header.sending_time);
 
     std::vector<uint8_t> result;
     result.reserve(1024); // Reserve space for efficiency
 
-    // Add packet header
+    // 1. Add Binary Packet Header (12 bytes)
     result.insert(result.end(), packet_header.begin(), packet_header.end());
 
-    // CME MDP 3.0 expects each update as a separate message with its own size field
-    // Instead of one message with multiple repeating groups, create individual messages
+    // Count total messages we'll send
+    uint16_t total_messages = update.price_levels.size() + update.trades.size();
+    if (total_messages == 0) total_messages = 1; // At least one empty message
 
+    // 2. Add Message Count (2 bytes, little-endian)
+    result.push_back(total_messages & 0xFF);
+    result.push_back((total_messages >> 8) & 0xFF);
+
+    // CME MDP 3.0 expects each update as a separate message with its own size field
     // Process each price level as a separate message
     for (const auto& level : update.price_levels) {
         IncrementalRefresh single_update;
@@ -196,12 +201,12 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // Add message size (uint16_t, little-endian)
+        // 3. Add Message Size (2 bytes, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
 
-        // Add SBE message
+        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
@@ -214,12 +219,12 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // Add message size (uint16_t, little-endian)
+        // 3. Add Message Size (2 bytes, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
 
-        // Add SBE message
+        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
@@ -227,12 +232,12 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
     if (update.price_levels.empty() && update.trades.empty()) {
         auto message = MDPMessageEncoder::encode_incremental_refresh(update);
 
-        // Add message size (uint16_t, little-endian)
+        // 3. Add Message Size (2 bytes, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
 
-        // Add SBE message
+        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
