@@ -1,7 +1,7 @@
 #include "network/feed_publisher.h"
+#include "messages/cme_sbe_encoder.h"
 #include "messages/message_factory.h"
 #include "messages/sbe_encoder.h"
-#include "messages/cme_sbe_encoder.h"
 #include "utils/logger.h"
 #include <sstream>
 
@@ -81,24 +81,24 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
         snapshot.header.sequence_number,
         snapshot.header.sending_time,
         snapshot.header.msg_count);
-    
+
     auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
-    
+
     // Combine packet header + message size + message (as expected by client)
     std::vector<uint8_t> result;
     result.reserve(packet_header.size() + 2 + message.size());
-    
+
     // Add packet header
     result.insert(result.end(), packet_header.begin(), packet_header.end());
-    
+
     // Add message size (uint16_t, little-endian)
     uint16_t message_size = static_cast<uint16_t>(message.size());
     result.push_back(message_size & 0xFF);
     result.push_back((message_size >> 8) & 0xFF);
-    
+
     // Add SBE message
     result.insert(result.end(), message.begin(), message.end());
-    
+
     return result;
 }
 
@@ -172,65 +172,65 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
     auto packet_header = MDPMessageEncoder::encode_packet_header(
         update.header.sequence_number,
         update.header.sending_time);
-    
+
     std::vector<uint8_t> result;
     result.reserve(1024); // Reserve space for efficiency
-    
+
     // Add packet header
     result.insert(result.end(), packet_header.begin(), packet_header.end());
-    
+
     // CME MDP 3.0 expects each update as a separate message with its own size field
     // Instead of one message with multiple repeating groups, create individual messages
-    
+
     // Process each price level as a separate message
     for (const auto& level : update.price_levels) {
         IncrementalRefresh single_update;
         single_update.header = update.header;
         single_update.transact_time = update.transact_time;
         single_update.price_levels.push_back(level);
-        
+
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
-        
+
         // Add message size (uint16_t, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
-        
+
         // Add SBE message
         result.insert(result.end(), message.begin(), message.end());
     }
-    
+
     // Process each trade as a separate message
     for (const auto& trade : update.trades) {
         IncrementalRefresh single_update;
         single_update.header = update.header;
         single_update.transact_time = update.transact_time;
         single_update.trades.push_back(trade);
-        
+
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
-        
+
         // Add message size (uint16_t, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
-        
+
         // Add SBE message
         result.insert(result.end(), message.begin(), message.end());
     }
-    
+
     // If no updates, create at least one empty message
     if (update.price_levels.empty() && update.trades.empty()) {
         auto message = MDPMessageEncoder::encode_incremental_refresh(update);
-        
+
         // Add message size (uint16_t, little-endian)
         uint16_t message_size = static_cast<uint16_t>(message.size());
         result.push_back(message_size & 0xFF);
         result.push_back((message_size >> 8) & 0xFF);
-        
+
         // Add SBE message
         result.insert(result.end(), message.begin(), message.end());
     }
-    
+
     return result;
 }
 

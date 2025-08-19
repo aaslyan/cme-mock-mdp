@@ -17,6 +17,25 @@ test_reference_data
 test_scenarios
 list_instruments
 simple_ref_test
+test_sbe_generated
+test_sbe_encoding
+test_sbe_client
+test_simple_sbe
+test_buffer_issue
+test_cme_sbe_encoder
+test_current_encoding
+test_fixed_packet_structure
+test_packet_structure
+test_packet_header
+test_full_packet
+test_multi_message_packet
+debug_packet_analyzer
+analyze_expected_format
+debug_header_fields
+hex_printer
+network_debug
+simple_hex_capture
+debug_snapshot_client
 
 # Log files
 *.log
