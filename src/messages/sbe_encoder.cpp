@@ -210,6 +210,9 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
         entry.mDPriceLevel(level.price_level);
     }
 
+    // Add empty Order ID entries group (required by CME specification)
+    message.noOrderIDEntriesCount(0);
+
     // Convert to uint8_t vector (header + message body)
     size_t total_length = header_size + message.encodedLength();
     std::vector<uint8_t> result(buffer.begin(), buffer.begin() + total_length);
