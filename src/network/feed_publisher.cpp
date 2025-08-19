@@ -190,12 +190,7 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // 3. Add Message Size (2 bytes, little-endian) - total message length
-        uint16_t message_size = static_cast<uint16_t>(message.size());
-        result.push_back(message_size & 0xFF);
-        result.push_back((message_size >> 8) & 0xFF);
-
-        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
+        // 3. Add SBE Message (contains CME Binary Size + Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
@@ -208,12 +203,7 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // 3. Add Message Size (2 bytes, little-endian) - total message length
-        uint16_t message_size = static_cast<uint16_t>(message.size());
-        result.push_back(message_size & 0xFF);
-        result.push_back((message_size >> 8) & 0xFF);
-
-        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
+        // 3. Add SBE Message (contains CME Binary Size + Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
@@ -221,12 +211,7 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
     if (update.price_levels.empty() && update.trades.empty()) {
         auto message = MDPMessageEncoder::encode_incremental_refresh(update);
 
-        // 3. Add Message Size (2 bytes, little-endian) - total message length
-        uint16_t message_size = static_cast<uint16_t>(message.size());
-        result.push_back(message_size & 0xFF);
-        result.push_back((message_size >> 8) & 0xFF);
-
-        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
+        // 3. Add SBE Message (contains CME Binary Size + Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
