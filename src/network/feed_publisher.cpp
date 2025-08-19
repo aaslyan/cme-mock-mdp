@@ -90,10 +90,10 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
     // 1. Add Binary Packet Header (12 bytes)
     result.insert(result.end(), packet_header.begin(), packet_header.end());
 
-    // 2. Add Message Count (2 bytes, little-endian) - always 1 for snapshots
-    uint16_t message_count = 1;
-    result.push_back(message_count & 0xFF);
-    result.push_back((message_count >> 8) & 0xFF);
+    // 2. Add Message Size (2 bytes, little-endian) - total message length
+    uint16_t message_size = static_cast<uint16_t>(message.size());
+    result.push_back(message_size & 0xFF);
+    result.push_back((message_size >> 8) & 0xFF);
 
     // 3. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
     result.insert(result.end(), message.begin(), message.end());
@@ -197,7 +197,12 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // 3. Add SBE Message directly (contains Block Length + Template ID + Schema ID + Version + Body)
+        // 3. Add Message Size (2 bytes, little-endian) - total message length
+        uint16_t message_size = static_cast<uint16_t>(message.size());
+        result.push_back(message_size & 0xFF);
+        result.push_back((message_size >> 8) & 0xFF);
+
+        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 
@@ -210,7 +215,12 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
 
         auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
 
-        // 3. Add SBE Message directly (contains Block Length + Template ID + Schema ID + Version + Body)
+        // 3. Add Message Size (2 bytes, little-endian) - total message length
+        uint16_t message_size = static_cast<uint16_t>(message.size());
+        result.push_back(message_size & 0xFF);
+        result.push_back((message_size >> 8) & 0xFF);
+
+        // 4. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
         result.insert(result.end(), message.begin(), message.end());
     }
 

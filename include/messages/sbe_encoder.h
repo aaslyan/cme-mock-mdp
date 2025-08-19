@@ -116,7 +116,7 @@ constexpr uint16_t TEMPLATE_FX_INCREMENTAL_REFRESH_TRADE = 48;
 constexpr uint16_t TEMPLATE_FX_SNAPSHOT_FULL_REFRESH = 52;
 
 // Block lengths (simplified, actual lengths vary)
-constexpr uint16_t BLOCK_LENGTH_SNAPSHOT = 44;
-constexpr uint16_t BLOCK_LENGTH_INCREMENTAL = 32;
+constexpr uint16_t BLOCK_LENGTH_SNAPSHOT = 25; // Fixed fields before entries repeating group
+constexpr uint16_t BLOCK_LENGTH_INCREMENTAL = 8; // Only transact_time before repeating groups
 
 } // namespace cme_mock
