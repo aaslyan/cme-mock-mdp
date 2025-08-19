@@ -169,9 +169,14 @@ void IncrementalFeedPublisher::publish_batch(const IncrementalRefresh& update)
 std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const IncrementalRefresh& update)
 {
     // Encode complete MDP packet with proper CME format
+    // Count the number of messages we'll send
+    uint16_t message_count = update.price_levels.size() + update.trades.size();
+    if (message_count == 0) message_count = 1; // At least one empty message
+    
     auto packet_header = MDPMessageEncoder::encode_packet_header(
         update.header.sequence_number,
-        update.header.sending_time);
+        update.header.sending_time,
+        message_count);
 
     std::vector<uint8_t> result;
     result.reserve(1024); // Reserve space for efficiency
