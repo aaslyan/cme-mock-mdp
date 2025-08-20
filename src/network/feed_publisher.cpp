@@ -77,11 +77,11 @@ void SnapshotFeedPublisher::publish_snapshot(uint32_t security_id)
 std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRefresh& snapshot)
 {
     // Encode complete MDP packet with proper CME format
-    auto packet_header = MDPMessageEncoder::encode_packet_header(
+    auto packet_header = CMESBEEncoder::encode_packet_header(
         snapshot.header.sequence_number,
         snapshot.header.sending_time);
 
-    auto message = MDPMessageEncoder::encode_snapshot_full_refresh(snapshot);
+    auto message = CMESBEEncoder::encode_snapshot_full_refresh(snapshot);
 
     // Build complete packet: Binary Packet Header + Message Count + SBE Message
     std::vector<uint8_t> result;
@@ -168,7 +168,7 @@ void IncrementalFeedPublisher::publish_batch(const IncrementalRefresh& update)
 std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const IncrementalRefresh& update)
 {
     // Encode complete MDP packet with proper CME format
-    auto packet_header = MDPMessageEncoder::encode_packet_header(
+    auto packet_header = CMESBEEncoder::encode_packet_header(
         update.header.sequence_number,
         update.header.sending_time);
 
@@ -186,7 +186,7 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
         single_update.transact_time = update.transact_time;
         single_update.price_levels.push_back(level);
 
-        auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
+        auto message = CMESBEEncoder::encode_incremental_refresh(single_update);
 
         // 2. Add Message Size (2 bytes, little-endian) - total message length
         uint16_t message_size = static_cast<uint16_t>(message.size());
@@ -204,7 +204,7 @@ std::vector<uint8_t> IncrementalFeedPublisher::encode_incremental(const Incremen
         single_update.transact_time = update.transact_time;
         single_update.trades.push_back(trade);
 
-        auto message = MDPMessageEncoder::encode_incremental_refresh(single_update);
+        auto message = CMESBEEncoder::encode_incremental_refresh(single_update);
 
         // 2. Add Message Size (2 bytes, little-endian) - total message length
         uint16_t message_size = static_cast<uint16_t>(message.size());
