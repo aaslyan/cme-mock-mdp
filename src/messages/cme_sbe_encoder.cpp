@@ -14,7 +14,7 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
     uint32_t sequence_number,
     uint64_t sending_time)
 {
-    std::vector<uint8_t> buffer(12); // 4 + 8 bytes for Binary Packet Header
+    std::vector<uint8_t> buffer(16); // 4 + 8 + 2 + 2 bytes for complete packet header
 
     // Encode sequence number (little-endian)
     buffer[0] = sequence_number & 0xFF;
@@ -26,6 +26,14 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
     for (int i = 0; i < 8; ++i) {
         buffer[4 + i] = (sending_time >> (i * 8)) & 0xFF;
     }
+
+    // Encode message count (1 message) - little-endian
+    buffer[12] = 1;
+    buffer[13] = 0;
+
+    // Message size will be filled in later by the caller
+    buffer[14] = 0;
+    buffer[15] = 0;
 
     return buffer;
 }

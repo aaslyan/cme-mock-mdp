@@ -141,3 +141,4 @@ Use test programs in `test/` directory:
 - Supports 40+ preconfigured instruments (equity futures, FX spot)
 - Message sequence numbers and timestamps follow CME specifications
 - Binary packet headers include message size fields per CME requirements
+- /init

@@ -20,10 +20,13 @@ public:
     static std::vector<uint8_t> encode_incremental_refresh(
         const IncrementalRefresh& incremental);
 
-    // Encode packet header (sequence number + timestamp)
+    // Encode packet header (sequence number + timestamp + message count + message size)
     static std::vector<uint8_t> encode_packet_header(
         uint32_t sequence_number,
         uint64_t sending_time);
+
+    // Set message size in packet header (at offset 14-15)
+    static void set_message_size(std::vector<uint8_t>& packet, uint16_t message_size);
 
 private:
     // Helper to determine if instrument is FX (Channel 330)

@@ -10,6 +10,7 @@
 #include "core/order_book_manager.h"
 #include "core/reference_data.h"
 #include "network/feed_publisher.h"
+#include "network/definition_feed_publisher.h"
 #include "scenarios/market_scenario.h"
 #include "utils/logger.h"
 
@@ -160,6 +161,12 @@ int main(int argc, char* argv[])
             config.network().incremental_feed_a.port,
             order_book_manager);
 
+        // Create definition feed publisher (use snapshot feed port + 1)
+        auto definition_publisher = std::make_shared<cme_mock::DefinitionFeedPublisher>(
+            config.network().snapshot_feed.ip,
+            config.network().snapshot_feed.port + 1,
+            std::shared_ptr<cme_mock::ReferenceDataManager>(&ref_data, [](cme_mock::ReferenceDataManager*) {}));
+
         // Initialize publishers
         if (!snapshot_publisher->initialize()) {
             std::cerr << "Failed to initialize snapshot publisher" << std::endl;
@@ -171,11 +178,18 @@ int main(int argc, char* argv[])
             return 1;
         }
 
+        if (!definition_publisher->initialize()) {
+            std::cerr << "Failed to initialize definition publisher" << std::endl;
+            return 1;
+        }
+
         std::cout << "\nServer initialized successfully" << std::endl;
         std::cout << "Snapshot feed: " << config.network().snapshot_feed.ip
                   << ":" << config.network().snapshot_feed.port << std::endl;
         std::cout << "Incremental feed: " << config.network().incremental_feed_a.ip
                   << ":" << config.network().incremental_feed_a.port << std::endl;
+        std::cout << "Definition feed: " << config.network().snapshot_feed.ip
+                  << ":" << (config.network().snapshot_feed.port + 1) << std::endl;
 
         // Create market data generator
         auto market_generator = std::make_shared<cme_mock::MarketDataGenerator>(
@@ -210,6 +224,11 @@ int main(int argc, char* argv[])
         std::cout << "\nServer is running. Press Ctrl+C to stop." << std::endl;
         std::cout << "Market Scenario: " << scenario->name() << std::endl;
         std::cout << "Generating " << market_config.orders_per_second << " updates/second" << std::endl;
+
+        // Publish all instrument definitions at startup (like CME does)
+        std::cout << "\nPublishing instrument definitions..." << std::endl;
+        definition_publisher->publish_all_definitions();
+        std::cout << "Instrument definitions published." << std::endl;
 
         // Start the scenario
         scenario->start();

@@ -6,6 +6,7 @@ INCLUDES = -I./include
 # Library source files
 LIB_SRCS = src/network/udp_publisher.cpp \
            src/network/feed_publisher.cpp \
+           src/network/definition_feed_publisher.cpp \
            src/network/udp_receiver.cpp \
            src/utils/logger.cpp \
            src/core/order_book.cpp \
@@ -15,6 +16,7 @@ LIB_SRCS = src/network/udp_publisher.cpp \
            src/messages/sbe_encoder.cpp \
            src/messages/sbe_decoder.cpp \
            src/messages/cme_sbe_encoder.cpp \
+           src/messages/instrument_encoder.cpp \
            src/messages/message_factory.cpp \
            src/config/configuration.cpp \
            src/scenarios/market_scenario.cpp
