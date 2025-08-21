@@ -20,12 +20,12 @@ public:
     static std::vector<uint8_t> encode_incremental_refresh(
         const IncrementalRefresh& incremental);
 
-    // Encode packet header (sequence number + timestamp + message count + message size)
+    // Encode packet header (sequence number + timestamp + message size placeholder)
     static std::vector<uint8_t> encode_packet_header(
         uint32_t sequence_number,
         uint64_t sending_time);
 
-    // Set message size in packet header (at offset 14-15)
+    // Set message size in packet header (at offset 12-13)
     static void set_message_size(std::vector<uint8_t>& packet, uint16_t message_size);
 
 private:
