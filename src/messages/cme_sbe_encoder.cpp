@@ -38,28 +38,25 @@ std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
     std::vector<char> buffer(buffer_size);
 
     try {
-        // Step 1: Encode the message header
-        cme_sbe::MessageHeader header(buffer.data(), 0, buffer.size(), cme_sbe::SnapshotFullRefresh52::sbeSchemaVersion());
-        header.blockLength(cme_sbe::SnapshotFullRefresh52::sbeBlockLength())
+        // Step 1: Wrap and encode the message header
+        cme_sbe::MessageHeader header;
+        header.wrap(buffer.data(), 0, 0, buffer.size())
+            .blockLength(cme_sbe::SnapshotFullRefresh52::sbeBlockLength())
             .templateId(cme_sbe::SnapshotFullRefresh52::sbeTemplateId())
             .schemaId(cme_sbe::SnapshotFullRefresh52::sbeSchemaId())
             .version(cme_sbe::SnapshotFullRefresh52::sbeSchemaVersion());
 
-        // Step 2: Encode the message body after the header
+        // Step 2: Wrap for encode and populate the message body
         size_t header_size = header.encodedLength();
-        cme_sbe::SnapshotFullRefresh52 sbe_msg(
-            buffer.data(),
-            header_size,
-            buffer.size(),
-            cme_sbe::SnapshotFullRefresh52::sbeBlockLength(),
-            cme_sbe::SnapshotFullRefresh52::sbeSchemaVersion());
+        cme_sbe::SnapshotFullRefresh52 sbe_msg;
+        sbe_msg.wrapForEncode(buffer.data(), header_size, buffer.size());
 
-        // Set basic fields
-        sbe_msg.securityID(snapshot.security_id);
-        sbe_msg.lastMsgSeqNumProcessed(snapshot.last_msg_seq_num_processed);
-        sbe_msg.rptSeq(snapshot.rpt_seq);
-        sbe_msg.totNumReports(snapshot.tot_num_reports);
-        sbe_msg.transactTime(snapshot.transact_time);
+        // Set basic fields using method chaining
+        sbe_msg.securityID(snapshot.security_id)
+            .lastMsgSeqNumProcessed(snapshot.last_msg_seq_num_processed)
+            .rptSeq(snapshot.rpt_seq)
+            .totNumReports(snapshot.tot_num_reports)
+            .transactTime(snapshot.transact_time);
 
         // Add entries using the group API
         size_t num_entries = std::min(snapshot.entries.size(), size_t(5));
@@ -68,7 +65,7 @@ std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
         for (size_t i = 0; i < num_entries; ++i) {
             const auto& entry = snapshot.entries[i];
 
-            // Set basic entry fields
+            // Use next() to advance to the next entry and chain field setters
             entries_group.next()
                 .mDPriceLevel(entry.price_level);
 
@@ -99,23 +96,20 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
     std::vector<char> buffer(buffer_size);
 
     try {
-        // Step 1: Encode the message header
-        cme_sbe::MessageHeader header(buffer.data(), 0, buffer.size(), cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
-        header.blockLength(cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength())
+        // Step 1: Wrap and encode the message header
+        cme_sbe::MessageHeader header;
+        header.wrap(buffer.data(), 0, 0, buffer.size())
+            .blockLength(cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength())
             .templateId(cme_sbe::MDIncrementalRefreshBook46::sbeTemplateId())
             .schemaId(cme_sbe::MDIncrementalRefreshBook46::sbeSchemaId())
             .version(cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
 
-        // Step 2: Encode the message body after the header
+        // Step 2: Wrap for encode and populate the message body
         size_t header_size = header.encodedLength();
-        cme_sbe::MDIncrementalRefreshBook46 sbe_msg(
-            buffer.data(),
-            header_size,
-            buffer.size(),
-            cme_sbe::MDIncrementalRefreshBook46::sbeBlockLength(),
-            cme_sbe::MDIncrementalRefreshBook46::sbeSchemaVersion());
+        cme_sbe::MDIncrementalRefreshBook46 sbe_msg;
+        sbe_msg.wrapForEncode(buffer.data(), header_size, buffer.size());
 
-        // Set basic fields
+        // Set basic fields using method chaining
         sbe_msg.transactTime(incremental.transact_time);
 
         // Add entries using the group API
@@ -125,7 +119,7 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
         for (size_t i = 0; i < num_entries; ++i) {
             const auto& level = incremental.price_levels[i];
 
-            // Set basic entry fields
+            // Use next() to advance to the next entry and chain field setters
             entries_group.next()
                 .securityID(level.security_id)
                 .rptSeq(level.rpt_seq)
