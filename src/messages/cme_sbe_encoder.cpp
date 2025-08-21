@@ -33,8 +33,10 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
 std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
     const SnapshotFullRefresh& snapshot)
 {
-    // Calculate buffer size
-    size_t buffer_size = 2048;
+    // Calculate buffer size - need space for header + message + groups
+    // Header: ~8 bytes, Message: ~50 bytes, Group header: 8 bytes, Entries: ~40 bytes each
+    size_t estimated_entries = std::min(snapshot.entries.size(), size_t(5));
+    size_t buffer_size = 8 + 50 + 8 + (estimated_entries * 40) + 512; // Add padding
     std::vector<char> buffer(buffer_size);
 
     try {
@@ -91,8 +93,10 @@ std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
 std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
     const IncrementalRefresh& incremental)
 {
-    // Calculate buffer size
-    size_t buffer_size = 2048;
+    // Calculate buffer size - need space for header + message + groups
+    // Header: ~8 bytes, Message: ~30 bytes, Group header: 8 bytes, Entries: ~50 bytes each
+    size_t estimated_entries = std::min(incremental.price_levels.size(), size_t(5));
+    size_t buffer_size = 8 + 30 + 8 + (estimated_entries * 50) + 512; // Add padding
     std::vector<char> buffer(buffer_size);
 
     try {
