@@ -160,10 +160,16 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
             entries_group.next()
                 .securityID(level.security_id)
                 .rptSeq(level.rpt_seq)
-                .mDPriceLevel(level.price_level);
+                .mDPriceLevel(level.price_level)
+                .numberOfOrders(level.number_of_orders)
+                .mDUpdateAction(static_cast<cme_sbe::MDUpdateAction::Value>(level.update_action))
+                .mDEntryType(static_cast<cme_sbe::MDEntryTypeBook::Value>(level.entry_type));
 
             // Set price using the PRICE9 composite
             entries_group.mDEntryPx().mantissa(level.price);
+
+            // Set entry size - required field
+            entries_group.mDEntrySize(level.quantity);
         }
 
         // Must encode NoOrderIDEntries group with count=0 following SBE pattern

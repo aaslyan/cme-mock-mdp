@@ -94,6 +94,125 @@ Generated CME MDP 3.0 message definitions including:
 - Supports multiple messages per packet
 - Implements proper sequence numbering and timestamps
 
+### CME MDP 3.0 Message Structure
+
+Complete packet structure follows CME specification:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          UDP PACKET                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                       PACKET HEADER (12 bytes)                             │
+│ ┌─────────────────┬─────────────────────────────────────────────────────┐   │
+│ │  Sequence Number│            Sending Time                             │   │
+│ │    (4 bytes)    │              (8 bytes)                             │   │
+│ │   little-endian │            little-endian                           │   │
+│ └─────────────────┴─────────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                          MESSAGE 1                                         │
+│ ┌─────────────────┬─────────────────────────────────────────────────────┐   │
+│ │  Message Size   │                SBE MESSAGE                         │   │
+│ │   (2 bytes)     │                                                     │   │ 
+│ │  little-endian  │  ┌─────────────────────────────────────────────┐   │   │
+│ │                 │  │        SBE MESSAGE HEADER (8 bytes)         │   │   │
+│ │                 │  │ ┌──────────┬──────────┬──────────┬────────┐ │   │   │
+│ │                 │  │ │blockLen  │templateId│ schemaId │version │ │   │   │
+│ │                 │  │ │(2 bytes) │(2 bytes) │(2 bytes) │(2 bytes│ │   │   │
+│ │                 │  │ │   = 11   │   = 46   │   = 1    │  = 13  │ │   │   │
+│ │                 │  │ └──────────┴──────────┴──────────┴────────┘ │   │   │
+│ │                 │  └─────────────────────────────────────────────┘   │   │
+│ │                 │  ┌─────────────────────────────────────────────┐   │   │
+│ │                 │  │      SBE MESSAGE BODY (variable length)     │   │   │
+│ │                 │  │                                             │   │   │
+│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
+│ │                 │  │ │        FIXED FIELDS (11 bytes)          │ │   │   │
+│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
+│ │                 │  │ │ │ transactTime│ matchEventIndicator │   │ │   │   │
+│ │                 │  │ │ │  (8 bytes)  │      (1 byte)       │   │ │   │   │
+│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
+│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
+│ │                 │  │                                             │   │   │
+│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
+│ │                 │  │ │       NoMDEntries GROUP                 │ │   │   │
+│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
+│ │                 │  │ │ │   Group     │      Group Data     │   │ │   │   │
+│ │                 │  │ │ │  Header     │    (per entry)      │   │ │   │   │
+│ │                 │  │ │ │ ┌─────────┐ │ ┌─────────────────┐ │   │ │   │   │
+│ │                 │  │ │ │ │blockLen │ │ │ securityID      │ │   │ │   │   │
+│ │                 │  │ │ │ │(2 bytes)│ │ │ (4 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │ │  = 32   │ │ │ rptSeq          │ │   │ │   │   │
+│ │                 │  │ │ │ ├─────────┤ │ │ (4 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │ │numInGrp │ │ │ mDEntryPx       │ │   │ │   │   │
+│ │                 │  │ │ │ │(1 byte) │ │ │ (8 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │ └─────────┘ │ │ mDEntrySize     │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ numberOfOrders  │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ mDPriceLevel    │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ mDUpdateAction  │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ mDEntryType     │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ tradeableSize   │ │   │ │   │   │
+│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
+│ │                 │  │ │ │             │ └─────────────────┘ │   │ │   │   │
+│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
+│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
+│ │                 │  │                                             │   │   │
+│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
+│ │                 │  │ │      NoOrderIDEntries GROUP (count=0)   │ │   │   │
+│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
+│ │                 │  │ │ │   Group     │      Group Data     │   │ │   │   │
+│ │                 │  │ │ │  Header     │     (empty)         │   │ │   │   │
+│ │                 │  │ │ │ ┌─────────┐ │                     │   │ │   │   │
+│ │                 │  │ │ │ │blockLen │ │                     │   │ │   │   │
+│ │                 │  │ │ │ │(2 bytes)│ │                     │   │ │   │   │
+│ │                 │  │ │ │ │  = 24   │ │                     │   │ │   │   │
+│ │                 │  │ │ │ ├─────────┤ │                     │   │ │   │   │
+│ │                 │  │ │ │ │numInGrp │ │                     │   │ │   │   │
+│ │                 │  │ │ │ │(1 byte) │ │                     │   │ │   │   │
+│ │                 │  │ │ │ │  = 0    │ │                     │   │ │   │   │
+│ │                 │  │ │ │ └─────────┘ │                     │   │ │   │   │
+│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
+│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
+│ │                 │  └─────────────────────────────────────────────┘   │   │
+│ └─────────────────┴─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### SBE Encoding Implementation
+
+The implementation uses the wrap-and-set pattern in `src/messages/cme_sbe_encoder.cpp:147`:
+
+```cpp
+// 1. Wrap buffer for encoding
+cme_sbe::MDIncrementalRefreshBook46 sbe_msg;
+sbe_msg.wrapForEncode(buffer.data(), header_size, buffer.size());
+
+// 2. Set values using method chaining
+sbe_msg.transactTime(incremental.transact_time);
+auto& entries_group = sbe_msg.noMDEntriesCount(num_entries);
+
+entries_group.next()
+    .securityID(level.security_id)
+    .rptSeq(level.rpt_seq)
+    .mDPriceLevel(level.price_level)
+    .numberOfOrders(level.number_of_orders)
+    .mDUpdateAction(static_cast<cme_sbe::MDUpdateAction::Value>(level.update_action))
+    .mDEntryType(static_cast<cme_sbe::MDEntryTypeBook::Value>(level.entry_type));
+
+// 3. Get encoded length for message size field
+size_t message_length = sbe_msg.encodedLength();
+```
+
+#### Key Constants:
+- **Template ID**: 46 (MDIncrementalRefreshBook)
+- **Schema ID**: 1, **Version**: 13
+- **Block Length**: 11 bytes (fixed fields)
+- **NoMDEntries Block Length**: 32 bytes per entry
+- **NoOrderIDEntries Block Length**: 24 bytes per entry
+
 ### Order Book State
 - Maintains synchronized state between snapshots and incremental updates
 - Supports configurable book depth (default: 10 levels)
