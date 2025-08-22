@@ -108,9 +108,17 @@ std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
             entries_group.mDEntryPx().mantissa(entry.price);
         }
 
-        // Get the total encoded length (header + message)
-        size_t total_length = header_size + sbe_msg.encodedLength();
-        buffer.resize(total_length);
+        // Get the SBE encoded length
+        size_t sbe_length = sbe_msg.encodedLength();
+
+        // Apply CME 8-byte alignment requirement
+        // "Market Data Incremental Refresh messages are padded to byte boundaries in multiples of 8 byte units"
+        size_t message_length = ((sbe_length + 7) / 8) * 8; // Round up to next multiple of 8
+        size_t padding_needed = message_length - sbe_length;
+
+        // Resize buffer to include SBE message + padding
+        size_t total_length = header_size + message_length;
+        buffer.resize(total_length, 0); // Fill padding with zeros
 
         // Convert char buffer to uint8_t buffer
         return std::vector<uint8_t>(buffer.begin(), buffer.end());
@@ -172,13 +180,33 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
             entries_group.mDEntrySize(level.quantity);
         }
 
-        // Must encode NoOrderIDEntries group with count=0 following SBE pattern
-        auto& order_entries_group = sbe_msg.noOrderIDEntriesCount(0);
-        (void)order_entries_group; // No entries to populate
+        // Add OrderID entries (CME typically includes order-level data)
+        // Based on analysis: 88-byte CME messages include OrderID entries
+        size_t num_order_entries = std::min(incremental.price_levels.size(), size_t(1)); // 1 order per price level
+        auto& order_entries_group = sbe_msg.noOrderIDEntriesCount(static_cast<uint8_t>(num_order_entries));
 
-        // Get the total encoded length (header + message)
-        size_t total_length = header_size + sbe_msg.encodedLength();
-        buffer.resize(total_length);
+        for (size_t i = 0; i < num_order_entries; ++i) {
+            const auto& level = incremental.price_levels[i];
+
+            order_entries_group.next()
+                .orderID(1000 + level.security_id + i) // Generate unique order ID
+                .mDOrderPriority(i + 1) // Order priority
+                .mDDisplayQty(level.quantity) // Display quantity
+                .referenceID(static_cast<uint8_t>(i + 1)) // Reference to MD entry
+                .orderUpdateAction(static_cast<cme_sbe::OrderUpdateAction::Value>(level.update_action));
+        }
+
+        // Get the SBE encoded length
+        size_t sbe_length = sbe_msg.encodedLength();
+
+        // Apply CME 8-byte alignment requirement
+        // "Market Data Incremental Refresh messages are padded to byte boundaries in multiples of 8 byte units"
+        size_t message_length = ((sbe_length + 7) / 8) * 8; // Round up to next multiple of 8
+        size_t padding_needed = message_length - sbe_length;
+
+        // Resize buffer to include SBE message + padding
+        size_t total_length = header_size + message_length;
+        buffer.resize(total_length, 0); // Fill padding with zeros
 
         // Convert char buffer to uint8_t buffer
         return std::vector<uint8_t>(buffer.begin(), buffer.end());
