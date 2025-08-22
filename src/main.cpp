@@ -88,7 +88,10 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Set logging level
+    // Set logging level and global verbose flag
+    extern bool g_verbose_mode;
+    g_verbose_mode = verbose;
+    
     if (verbose) {
         cme_mock::Logger::instance().set_level(cme_mock::LogLevel::DEBUG);
     } else {

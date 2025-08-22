@@ -2,8 +2,14 @@
 #include "messages/cme_sbe_encoder.h"
 #include "messages/message_factory.h"
 #include "messages/sbe_encoder.h"
+#include "utils/hexdump.h"
 #include "utils/logger.h"
+#include "utils/packet_verifier.h"
+#include <algorithm>
 #include <sstream>
+
+// Global verbose flag definition
+bool g_verbose_mode = false;
 
 namespace cme_mock {
 
@@ -78,10 +84,10 @@ std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRe
 {
     // Use the centralized encoder for proper packet structure
     auto message = CMESBEEncoder::encode_snapshot_full_refresh(snapshot);
-    
+
     // Create a single-message packet
     std::vector<std::vector<uint8_t>> messages = { message };
-    
+
     return CMESBEEncoder::encode_multi_message_packet(
         snapshot.header.sequence_number,
         snapshot.header.sending_time,
@@ -101,12 +107,31 @@ void IncrementalFeedPublisher::publish_book_update(uint32_t security_id, const M
 
     auto encoded = encode_incremental(update);
 
-    // Print hex data for debugging
-    std::cout << "SERVER SENDING INCREMENTAL (" << encoded.size() << " bytes): ";
-    for (size_t i = 0; i < std::min(encoded.size(), size_t(32)); ++i) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << (unsigned)encoded[i] << " ";
+    // Verbose packet logging and verification
+    if (g_verbose_mode) {
+        std::cout << "\n=== SERVER SENDING INCREMENTAL UPDATE ===" << std::endl;
+        std::cout << "Packet size: " << encoded.size() << " bytes" << std::endl;
+        std::cout << "Security ID: " << security_id << std::endl;
+        std::cout << "Price levels: " << update.price_levels.size() << std::endl;
+        std::cout << "Trades: " << update.trades.size() << std::endl;
+
+        // Show detailed packet content
+        hexdump(encoded, "Complete Packet");
+
+        // Verify packet structure
+        PacketVerifier::verify_and_log(encoded, "Incremental Update Packet");
+        std::cout << "==========================================\n"
+                  << std::endl;
+    } else {
+        // Compact output for non-verbose mode
+        std::cout << "SERVER SENDING INCREMENTAL (" << encoded.size() << " bytes): ";
+        for (size_t i = 0; i < std::min(encoded.size(), size_t(16)); ++i) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << (unsigned)encoded[i] << " ";
+        }
+        if (encoded.size() > 16)
+            std::cout << "...";
+        std::cout << std::dec << std::endl;
     }
-    std::cout << std::dec << std::endl;
 
     if (udp_publisher_->send(encoded)) {
         LOG_DEBUG("Sent book update for security " + std::to_string(security_id));

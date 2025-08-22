@@ -6,6 +6,9 @@
 #include <chrono>
 #include <memory>
 
+// Global verbose flag for detailed packet logging
+extern bool g_verbose_mode;
+
 namespace cme_mock {
 
 // Base class for feed publishers
