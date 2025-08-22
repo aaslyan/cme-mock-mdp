@@ -35,20 +35,23 @@ bool Configuration::load_from_json(const std::string& json_content)
         if (network_start != std::string::npos) {
             size_t network_obj_start = json_content.find("{", network_start);
             size_t network_obj_end = json_content.find("}", network_obj_start);
-            
+
             // Find closing brace that matches network object (handle nested objects)
             int brace_count = 1;
             size_t pos = network_obj_start + 1;
             while (pos < json_content.length() && brace_count > 0) {
-                if (json_content[pos] == '{') brace_count++;
-                else if (json_content[pos] == '}') brace_count--;
-                if (brace_count == 0) network_obj_end = pos;
+                if (json_content[pos] == '{')
+                    brace_count++;
+                else if (json_content[pos] == '}')
+                    brace_count--;
+                if (brace_count == 0)
+                    network_obj_end = pos;
                 pos++;
             }
-            
+
             if (network_obj_start != std::string::npos && network_obj_end != std::string::npos) {
                 std::string network_obj = json_content.substr(network_obj_start, network_obj_end - network_obj_start + 1);
-                
+
                 // Parse mode
                 size_t mode_pos = network_obj.find("\"mode\":");
                 if (mode_pos != std::string::npos) {
@@ -58,7 +61,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         network_.mode = network_obj.substr(quote_start + 1, quote_end - quote_start - 1);
                     }
                 }
-                
+
                 // Parse incremental_feed_a
                 size_t inc_a_pos = network_obj.find("\"incremental_feed_a\":");
                 if (inc_a_pos != std::string::npos) {
@@ -66,7 +69,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                     size_t obj_end = network_obj.find("}", obj_start);
                     if (obj_start != std::string::npos && obj_end != std::string::npos) {
                         std::string feed_obj = network_obj.substr(obj_start, obj_end - obj_start + 1);
-                        
+
                         // Parse IP
                         size_t ip_pos = feed_obj.find("\"ip\":");
                         if (ip_pos != std::string::npos) {
@@ -76,7 +79,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                                 network_.incremental_feed_a.ip = feed_obj.substr(quote_start + 1, quote_end - quote_start - 1);
                             }
                         }
-                        
+
                         // Parse port
                         size_t port_pos = feed_obj.find("\"port\":");
                         if (port_pos != std::string::npos) {
@@ -92,7 +95,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         }
                     }
                 }
-                
+
                 // Parse incremental_feed_b
                 size_t inc_b_pos = network_obj.find("\"incremental_feed_b\":");
                 if (inc_b_pos != std::string::npos) {
@@ -100,7 +103,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                     size_t obj_end = network_obj.find("}", obj_start);
                     if (obj_start != std::string::npos && obj_end != std::string::npos) {
                         std::string feed_obj = network_obj.substr(obj_start, obj_end - obj_start + 1);
-                        
+
                         // Parse IP
                         size_t ip_pos = feed_obj.find("\"ip\":");
                         if (ip_pos != std::string::npos) {
@@ -110,7 +113,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                                 network_.incremental_feed_b.ip = feed_obj.substr(quote_start + 1, quote_end - quote_start - 1);
                             }
                         }
-                        
+
                         // Parse port
                         size_t port_pos = feed_obj.find("\"port\":");
                         if (port_pos != std::string::npos) {
@@ -126,7 +129,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         }
                     }
                 }
-                
+
                 // Parse snapshot_feed
                 size_t snap_pos = network_obj.find("\"snapshot_feed\":");
                 if (snap_pos != std::string::npos) {
@@ -134,7 +137,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                     size_t obj_end = network_obj.find("}", obj_start);
                     if (obj_start != std::string::npos && obj_end != std::string::npos) {
                         std::string feed_obj = network_obj.substr(obj_start, obj_end - obj_start + 1);
-                        
+
                         // Parse IP
                         size_t ip_pos = feed_obj.find("\"ip\":");
                         if (ip_pos != std::string::npos) {
@@ -144,7 +147,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                                 network_.snapshot_feed.ip = feed_obj.substr(quote_start + 1, quote_end - quote_start - 1);
                             }
                         }
-                        
+
                         // Parse port
                         size_t port_pos = feed_obj.find("\"port\":");
                         if (port_pos != std::string::npos) {
@@ -162,7 +165,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                 }
             }
         }
-        
+
         // Parse market data configuration
         size_t market_data_start = json_content.find("\"market_data\":");
         if (market_data_start != std::string::npos) {
@@ -170,7 +173,7 @@ bool Configuration::load_from_json(const std::string& json_content)
             size_t obj_end = json_content.find("}", obj_start);
             if (obj_start != std::string::npos && obj_end != std::string::npos) {
                 std::string market_obj = json_content.substr(obj_start, obj_end - obj_start + 1);
-                
+
                 // Parse snapshot_interval_seconds
                 size_t snap_interval_pos = market_obj.find("\"snapshot_interval_seconds\":");
                 if (snap_interval_pos != std::string::npos) {
@@ -184,7 +187,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         market_data_.snapshot_interval_seconds = std::stoi(market_obj.substr(num_start, num_end - num_start));
                     }
                 }
-                
+
                 // Parse message_batch_size
                 size_t batch_pos = market_obj.find("\"message_batch_size\":");
                 if (batch_pos != std::string::npos) {
@@ -198,7 +201,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         market_data_.message_batch_size = std::stoi(market_obj.substr(num_start, num_end - num_start));
                     }
                 }
-                
+
                 // Parse max_book_depth
                 size_t depth_pos = market_obj.find("\"max_book_depth\":");
                 if (depth_pos != std::string::npos) {
@@ -212,7 +215,7 @@ bool Configuration::load_from_json(const std::string& json_content)
                         market_data_.max_book_depth = std::stoi(market_obj.substr(num_start, num_end - num_start));
                     }
                 }
-                
+
                 // Parse incremental_publish_interval_ms
                 size_t inc_interval_pos = market_obj.find("\"incremental_publish_interval_ms\":");
                 if (inc_interval_pos != std::string::npos) {

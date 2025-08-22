@@ -67,11 +67,11 @@ bool UDPReceiver::initialize()
         if (ip_host >= 0xE0000000 && ip_host <= 0xEFFFFFFF) {
             // This is a multicast address, join the multicast group
             LOG_INFO("Joining multicast group: " + ip_address_);
-            
+
             struct ip_mreq mreq;
             mreq.imr_multiaddr.s_addr = addr_check.s_addr;
             mreq.imr_interface.s_addr = INADDR_ANY;
-            
+
             if (setsockopt(socket_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
                 LOG_ERROR("Failed to join multicast group: " + std::string(strerror(errno)));
                 cleanup();

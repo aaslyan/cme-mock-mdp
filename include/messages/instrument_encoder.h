@@ -27,7 +27,7 @@ public:
 private:
     // Helper to determine instrument type from symbol
     static bool is_spread_instrument(const std::string& symbol);
-    
+
     // Convert our internal structures to SBE format
     static void populate_future_message(
         cme_sbe::MDInstrumentDefinitionFuture54& sbe_msg,

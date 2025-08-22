@@ -172,16 +172,16 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
     // Use standard SBE format that the parser expects
     cme_sbe::MDIncrementalRefreshBook46 message;
     message.wrapAndApplyHeader(buffer.data(), 0, buffer.size());
-    
+
     // Set message fields
     message.transactTime(incremental.transact_time);
-    
+
     // Add price level entries
     auto& entries = message.noMDEntriesCount(static_cast<std::uint8_t>(incremental.price_levels.size()));
     for (size_t i = 0; i < incremental.price_levels.size(); ++i) {
         auto& entry = entries.next();
         const auto& level = incremental.price_levels[i];
-        
+
         entry.mDUpdateAction(static_cast<cme_sbe::MDUpdateAction::Value>(level.update_action));
         entry.mDEntryType(static_cast<cme_sbe::MDEntryTypeBook::Value>(level.entry_type));
         entry.securityID(level.security_id);
@@ -191,10 +191,10 @@ std::vector<uint8_t> MDPMessageEncoder::encode_incremental_refresh(
         entry.numberOfOrders(level.number_of_orders);
         entry.mDPriceLevel(level.price_level);
     }
-    
+
     // Add empty Order ID entries group (required by CME specification)
     message.noOrderIDEntriesCount(0);
-    
+
     // Convert to uint8_t vector - standard SBE format
     size_t total_size = message.encodedLength();
     std::vector<uint8_t> result(buffer.begin(), buffer.begin() + total_size);

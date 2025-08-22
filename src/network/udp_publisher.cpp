@@ -44,13 +44,13 @@ bool UDPPublisher::initialize()
         if (ip_host >= 0xE0000000 && ip_host <= 0xEFFFFFFF) {
             // This is a multicast address, set multicast options
             LOG_INFO("Configuring multicast for address: " + ip_address_);
-            
+
             // Set multicast TTL
             unsigned char ttl = 64; // Allow routing through switches/routers
             if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
                 LOG_WARNING("Failed to set multicast TTL: " + std::string(strerror(errno)));
             }
-            
+
             // Enable multicast loopback for local testing
             unsigned char loop = 1;
             if (setsockopt(socket_fd_, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop)) < 0) {

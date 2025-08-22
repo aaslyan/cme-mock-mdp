@@ -1,8 +1,8 @@
 #pragma once
 
-#include "network/feed_publisher.h"
-#include "messages/instrument_encoder.h"
 #include "core/reference_data.h"
+#include "messages/instrument_encoder.h"
+#include "network/feed_publisher.h"
 #include <memory>
 
 namespace cme_mock {
@@ -11,7 +11,7 @@ namespace cme_mock {
 class DefinitionFeedPublisher : public FeedPublisher {
 public:
     DefinitionFeedPublisher(const std::string& ip, uint16_t port,
-                           std::shared_ptr<ReferenceDataManager> ref_data_manager);
+        std::shared_ptr<ReferenceDataManager> ref_data_manager);
 
     // Publish all instrument definitions at session start
     void publish_all_definitions();

@@ -2,14 +2,14 @@
 #include "messages/cme_sbe_encoder.h"
 #include "messages/message_factory.h"
 #include "utils/logger.h"
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 namespace cme_mock {
 
 DefinitionFeedPublisher::DefinitionFeedPublisher(const std::string& ip, uint16_t port,
-                                               std::shared_ptr<ReferenceDataManager> ref_data_manager)
+    std::shared_ptr<ReferenceDataManager> ref_data_manager)
     : FeedPublisher(ip, port, nullptr) // No order book manager needed
     , ref_data_manager_(ref_data_manager)
     , sequence_number_(1)
@@ -41,7 +41,7 @@ void DefinitionFeedPublisher::publish_instrument_definition(uint32_t security_id
     auto encoded = encode_definition(*instrument);
 
     // Print hex data for debugging
-    std::cout << "SERVER SENDING DEFINITION (" << encoded.size() << " bytes) for " 
+    std::cout << "SERVER SENDING DEFINITION (" << encoded.size() << " bytes) for "
               << instrument->symbol << ": ";
     for (size_t i = 0; i < std::min(encoded.size(), size_t(32)); ++i) {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << (unsigned)encoded[i] << " ";
