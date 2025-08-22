@@ -14,7 +14,7 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
     uint32_t sequence_number,
     uint64_t sending_time)
 {
-    std::vector<uint8_t> buffer(14); // 4 + 8 + 2 bytes: sequence + timestamp + message size
+    std::vector<uint8_t> buffer(12); // 4 + 8 bytes: sequence + timestamp only
 
     // Encode sequence number (little-endian)
     buffer[0] = sequence_number & 0xFF;
@@ -27,20 +27,40 @@ std::vector<uint8_t> CMESBEEncoder::encode_packet_header(
         buffer[4 + i] = (sending_time >> (i * 8)) & 0xFF;
     }
 
-    // Message size will be filled in later by the caller
-    buffer[12] = 0;
-    buffer[13] = 0;
-
     return buffer;
 }
 
-void CMESBEEncoder::set_message_size(std::vector<uint8_t>& packet, uint16_t message_size)
+std::vector<uint8_t> CMESBEEncoder::encode_message_size(uint16_t message_size)
 {
-    // Set message size at offset 12-13 (little-endian)
-    if (packet.size() >= 14) {
-        packet[12] = message_size & 0xFF;
-        packet[13] = (message_size >> 8) & 0xFF;
+    std::vector<uint8_t> buffer(2);
+    // Encode message size (little-endian)
+    buffer[0] = message_size & 0xFF;
+    buffer[1] = (message_size >> 8) & 0xFF;
+    return buffer;
+}
+
+std::vector<uint8_t> CMESBEEncoder::encode_multi_message_packet(
+    uint32_t sequence_number,
+    uint64_t sending_time,
+    const std::vector<std::vector<uint8_t>>& messages)
+{
+    std::vector<uint8_t> packet;
+
+    // Add packet header (12 bytes)
+    auto header = encode_packet_header(sequence_number, sending_time);
+    packet.insert(packet.end(), header.begin(), header.end());
+
+    // Add each message with its size field
+    for (const auto& message : messages) {
+        // Add message size (2 bytes)
+        auto msg_size = encode_message_size(static_cast<uint16_t>(message.size()));
+        packet.insert(packet.end(), msg_size.begin(), msg_size.end());
+
+        // Add the SBE message
+        packet.insert(packet.end(), message.begin(), message.end());
     }
+
+    return packet;
 }
 
 std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(

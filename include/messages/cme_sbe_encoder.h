@@ -20,13 +20,19 @@ public:
     static std::vector<uint8_t> encode_incremental_refresh(
         const IncrementalRefresh& incremental);
 
-    // Encode packet header (sequence number + timestamp + message size placeholder)
+    // Encode packet header (sequence number + timestamp)
     static std::vector<uint8_t> encode_packet_header(
         uint32_t sequence_number,
         uint64_t sending_time);
 
-    // Set message size in packet header (at offset 12-13)
-    static void set_message_size(std::vector<uint8_t>& packet, uint16_t message_size);
+    // Encode message size field (2 bytes) that goes before each SBE message
+    static std::vector<uint8_t> encode_message_size(uint16_t message_size);
+
+    // Encode complete multi-message packet
+    static std::vector<uint8_t> encode_multi_message_packet(
+        uint32_t sequence_number,
+        uint64_t sending_time,
+        const std::vector<std::vector<uint8_t>>& messages);
 
 private:
     // Helper to determine if instrument is FX (Channel 330)
