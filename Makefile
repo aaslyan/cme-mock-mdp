@@ -9,6 +9,8 @@ LIB_SRCS = src/network/udp_publisher.cpp \
            src/network/definition_feed_publisher.cpp \
            src/network/udp_receiver.cpp \
            src/utils/logger.cpp \
+           src/utils/hexdump.cpp \
+           src/utils/packet_verifier.cpp \
            src/core/order_book.cpp \
            src/core/order_book_manager.cpp \
            src/core/market_data_generator.cpp \
