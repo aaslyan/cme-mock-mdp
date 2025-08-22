@@ -127,9 +127,9 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
     const IncrementalRefresh& incremental)
 {
     // Calculate buffer size - need space for header + message + groups
-    // Header: ~8 bytes, Message: ~30 bytes, NoMDEntries header: 8 bytes, NoOrderIDEntries header: 8 bytes, Entries: ~50 bytes each
+    // Header: ~8 bytes, Message: ~30 bytes, NoMDEntries: 8 bytes header + entries
     size_t estimated_entries = std::min(incremental.price_levels.size(), size_t(5));
-    size_t buffer_size = 8 + 30 + 8 + 8 + (estimated_entries * 50) + 512; // Add padding for both groups
+    size_t buffer_size = 8 + 30 + 8 + (estimated_entries * 50) + 512; // Add padding
     std::vector<char> buffer(buffer_size);
 
     try {
@@ -166,9 +166,9 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
             entries_group.mDEntryPx().mantissa(level.price);
         }
 
-        // Add NoOrderIDEntries group (empty for now - required by parser)
+        // Must encode NoOrderIDEntries group with count=0 following SBE pattern
         auto& order_entries_group = sbe_msg.noOrderIDEntriesCount(0);
-        (void)order_entries_group; // Suppress unused variable warning
+        (void)order_entries_group; // No entries to populate
 
         // Get the total encoded length (header + message)
         size_t total_length = header_size + sbe_msg.encodedLength();

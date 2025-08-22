@@ -76,29 +76,16 @@ void SnapshotFeedPublisher::publish_snapshot(uint32_t security_id)
 
 std::vector<uint8_t> SnapshotFeedPublisher::encode_snapshot(const SnapshotFullRefresh& snapshot)
 {
-    // Encode complete MDP packet with proper CME format
-    auto packet_header = CMESBEEncoder::encode_packet_header(
-        snapshot.header.sequence_number,
-        snapshot.header.sending_time);
-
+    // Use the centralized encoder for proper packet structure
     auto message = CMESBEEncoder::encode_snapshot_full_refresh(snapshot);
-
-    // Build complete packet: Binary Packet Header + Message Count + SBE Message
-    std::vector<uint8_t> result;
-    result.reserve(packet_header.size() + 2 + message.size());
-
-    // 1. Add Binary Packet Header (12 bytes)
-    result.insert(result.end(), packet_header.begin(), packet_header.end());
-
-    // 2. Add Message Size (2 bytes, little-endian) - total message length
-    uint16_t message_size = static_cast<uint16_t>(message.size());
-    result.push_back(message_size & 0xFF);
-    result.push_back((message_size >> 8) & 0xFF);
-
-    // 3. Add SBE Message (contains Block Length + Template ID + Schema ID + Version + Body)
-    result.insert(result.end(), message.begin(), message.end());
-
-    return result;
+    
+    // Create a single-message packet
+    std::vector<std::vector<uint8_t>> messages = { message };
+    
+    return CMESBEEncoder::encode_multi_message_packet(
+        snapshot.header.sequence_number,
+        snapshot.header.sending_time,
+        messages);
 }
 
 // IncrementalFeedPublisher implementation
