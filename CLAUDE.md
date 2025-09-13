@@ -19,6 +19,13 @@ cmake .. && make -j4
 make all
 ```
 
+### Build Single Test
+```bash
+# Build specific test binary
+make test_order_book
+make test_mdp_encoding
+```
+
 ### Format Code Before Committing
 ```bash
 clang-format --style=WebKit -i src/**/*.cpp include/**/*.h test/*.cpp
@@ -33,6 +40,13 @@ clang-format --style=WebKit -i src/**/*.cpp include/**/*.h test/*.cpp
 ./test_reference_data      # Test reference data management
 ./test_scenarios           # Test market scenarios
 ./test_udp_publisher       # Test UDP network layer
+./test_sbe_encoding        # Test SBE encoding
+./test_packet_structure    # Verify packet format
+```
+
+### Quick Integration Test
+```bash
+./quick_test.sh            # Simple server-client test
 ```
 
 ### System Integration Tests
@@ -52,6 +66,8 @@ clang-format --style=WebKit -i src/**/*.cpp include/**/*.h test/*.cpp
 ./debug_client              # Debug snapshot/incremental feeds
 ./cme_test_client          # Full CME client test
 ./list_instruments         # List configured instruments
+./network_debug            # Network packet analyzer
+./simple_hex_capture       # Capture and display hex packets
 ```
 
 ## Architecture
@@ -67,17 +83,24 @@ clang-format --style=WebKit -i src/**/*.cpp include/**/*.h test/*.cpp
 **Network Layer** (`src/network/`)
 - `udp_publisher.cpp/h` - UDP unicast/multicast publisher
 - `feed_publisher.cpp/h` - Manages snapshot and incremental feed publishing
+- `definition_feed_publisher.cpp/h` - Publishes instrument definitions
 - `udp_receiver.cpp/h` - UDP receiver for testing
 
 **Message Encoding** (`src/messages/`)
 - `sbe_encoder.cpp/h` - SBE message encoding utilities
 - `cme_sbe_encoder.cpp/h` - CME MDP 3.0 specific encoding
 - `message_factory.cpp/h` - Creates appropriate message types
-- `mdp_messages.h` - MDP message definitions
+- `instrument_encoder.cpp/h` - Encodes instrument definitions
+- `sbe_decoder.cpp/h` - SBE message decoding
 
 **Configuration** (`src/config/`)
 - `configuration.cpp/h` - JSON configuration parsing
 - Server config includes network settings, instruments, and market scenarios
+
+**Utilities** (`src/utils/`)
+- `logger.cpp/h` - Logging utilities
+- `hexdump.cpp/h` - Hex dump for debugging
+- `packet_verifier.cpp/h` - Packet validation
 
 ### SBE Schema (`include/cme_sbe/`)
 Generated CME MDP 3.0 message definitions including:
@@ -90,98 +113,19 @@ Generated CME MDP 3.0 message definitions including:
 
 ### MDP 3.0 Protocol
 - Uses SBE for binary encoding with schema version 13
-- Packet structure: Binary Packet Header + Message Header + Message Body
+- Packet structure: Binary Packet Header (12 bytes) + Message Size (2 bytes) + SBE Message
 - Supports multiple messages per packet
 - Implements proper sequence numbering and timestamps
 
 ### CME MDP 3.0 Message Structure
 
-Complete packet structure follows CME specification:
+The packet follows CME specification with:
+- **Packet Header**: 12 bytes (4-byte sequence + 8-byte timestamp)
+- **Message Size**: 2 bytes little-endian
+- **SBE Header**: 8 bytes (blockLen=11, templateId=46, schemaId=1, version=13)
+- **Message Body**: Variable length with fixed fields and repeating groups
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          UDP PACKET                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                       PACKET HEADER (12 bytes)                             │
-│ ┌─────────────────┬─────────────────────────────────────────────────────┐   │
-│ │  Sequence Number│            Sending Time                             │   │
-│ │    (4 bytes)    │              (8 bytes)                             │   │
-│ │   little-endian │            little-endian                           │   │
-│ └─────────────────┴─────────────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                          MESSAGE 1                                         │
-│ ┌─────────────────┬─────────────────────────────────────────────────────┐   │
-│ │  Message Size   │                SBE MESSAGE                         │   │
-│ │   (2 bytes)     │                                                     │   │ 
-│ │  little-endian  │  ┌─────────────────────────────────────────────┐   │   │
-│ │                 │  │        SBE MESSAGE HEADER (8 bytes)         │   │   │
-│ │                 │  │ ┌──────────┬──────────┬──────────┬────────┐ │   │   │
-│ │                 │  │ │blockLen  │templateId│ schemaId │version │ │   │   │
-│ │                 │  │ │(2 bytes) │(2 bytes) │(2 bytes) │(2 bytes│ │   │   │
-│ │                 │  │ │   = 11   │   = 46   │   = 1    │  = 13  │ │   │   │
-│ │                 │  │ └──────────┴──────────┴──────────┴────────┘ │   │   │
-│ │                 │  └─────────────────────────────────────────────┘   │   │
-│ │                 │  ┌─────────────────────────────────────────────┐   │   │
-│ │                 │  │      SBE MESSAGE BODY (variable length)     │   │   │
-│ │                 │  │                                             │   │   │
-│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
-│ │                 │  │ │        FIXED FIELDS (11 bytes)          │ │   │   │
-│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
-│ │                 │  │ │ │ transactTime│ matchEventIndicator │   │ │   │   │
-│ │                 │  │ │ │  (8 bytes)  │      (1 byte)       │   │ │   │   │
-│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
-│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
-│ │                 │  │                                             │   │   │
-│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
-│ │                 │  │ │       NoMDEntries GROUP                 │ │   │   │
-│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
-│ │                 │  │ │ │   Group     │      Group Data     │   │ │   │   │
-│ │                 │  │ │ │  Header     │    (per entry)      │   │ │   │   │
-│ │                 │  │ │ │ ┌─────────┐ │ ┌─────────────────┐ │   │ │   │   │
-│ │                 │  │ │ │ │blockLen │ │ │ securityID      │ │   │ │   │   │
-│ │                 │  │ │ │ │(2 bytes)│ │ │ (4 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │ │  = 32   │ │ │ rptSeq          │ │   │ │   │   │
-│ │                 │  │ │ │ ├─────────┤ │ │ (4 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │ │numInGrp │ │ │ mDEntryPx       │ │   │ │   │   │
-│ │                 │  │ │ │ │(1 byte) │ │ │ (8 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │ └─────────┘ │ │ mDEntrySize     │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ numberOfOrders  │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ mDPriceLevel    │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ mDUpdateAction  │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ mDEntryType     │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (1 byte)        │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ tradeableSize   │ │   │ │   │   │
-│ │                 │  │ │ │             │ │ (4 bytes)       │ │   │ │   │   │
-│ │                 │  │ │ │             │ └─────────────────┘ │   │ │   │   │
-│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
-│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
-│ │                 │  │                                             │   │   │
-│ │                 │  │ ┌─────────────────────────────────────────┐ │   │   │
-│ │                 │  │ │      NoOrderIDEntries GROUP (count=0)   │ │   │   │
-│ │                 │  │ │ ┌─────────────┬─────────────────────┐   │ │   │   │
-│ │                 │  │ │ │   Group     │      Group Data     │   │ │   │   │
-│ │                 │  │ │ │  Header     │     (empty)         │   │ │   │   │
-│ │                 │  │ │ │ ┌─────────┐ │                     │   │ │   │   │
-│ │                 │  │ │ │ │blockLen │ │                     │   │ │   │   │
-│ │                 │  │ │ │ │(2 bytes)│ │                     │   │ │   │   │
-│ │                 │  │ │ │ │  = 24   │ │                     │   │ │   │   │
-│ │                 │  │ │ │ ├─────────┤ │                     │   │ │   │   │
-│ │                 │  │ │ │ │numInGrp │ │                     │   │ │   │   │
-│ │                 │  │ │ │ │(1 byte) │ │                     │   │ │   │   │
-│ │                 │  │ │ │ │  = 0    │ │                     │   │ │   │   │
-│ │                 │  │ │ │ └─────────┘ │                     │   │ │   │   │
-│ │                 │  │ │ └─────────────┴─────────────────────┘   │ │   │   │
-│ │                 │  │ └─────────────────────────────────────────┘ │   │   │
-│ │                 │  └─────────────────────────────────────────────┘   │   │
-│ └─────────────────┴─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-#### SBE Encoding Implementation
+#### SBE Encoding Pattern
 
 The implementation uses the wrap-and-set pattern in `src/messages/cme_sbe_encoder.cpp:147`:
 
@@ -241,17 +185,10 @@ Edit `config/server_config.json` to add instruments with required fields:
 - contract_size, margin requirements
 
 ### Testing Specific Messages
-Use test programs in `test/` directory:
-- `test_packet_structure.cpp` - Verify packet format
-- `test_sbe_encoding.cpp` - Test SBE encoding
-- `test_multi_message_packet.cpp` - Test multi-message packets
+Use test programs in `test/` directory to verify specific functionality.
 
 ### Debugging Network Issues
-```bash
-./network_debug            # Network packet analyzer
-./simple_hex_capture       # Capture and display hex packets
-./debug_client -v          # Verbose client debugging
-```
+Use `./network_debug` for packet analysis or `./debug_client -v` for verbose debugging.
 
 ## Important Notes
 
@@ -260,4 +197,3 @@ Use test programs in `test/` directory:
 - Supports 40+ preconfigured instruments (equity futures, FX spot)
 - Message sequence numbers and timestamps follow CME specifications
 - Binary packet headers include message size fields per CME requirements
-- /init
