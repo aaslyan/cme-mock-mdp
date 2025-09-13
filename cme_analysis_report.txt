@@ -1,0 +1,123 @@
+ACTUAL CME DATA ANALYSIS:
+- Total packet size: 125 bytes
+- Message count: 12
+- Message 1: 88 bytes, Template 46, Block 11
+  MD Entries: 0, Order Entries: 0
+- Message 2: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 3: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 4: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 5: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 6: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 7: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 8: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 9: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 10: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 11: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+- Message 12: 0 bytes, Template 0, Block 0
+  MD Entries: 0, Order Entries: 0
+✅ Real CME data uses 8-byte alignment
+
+MOCK SERVER FIXES NEEDED:
+1. Add OrderID entries to match production format
+2. Ensure 8-byte message alignment
+3. Match exact message sizes from real data
+
+
+Detailed packet info:
+Sequence: 1
+Timestamp: 9255003132036915216
+Messages: 12
+
+Message 1:
+  Size: 88
+  Template: 46
+  Block Length: 11
+  MD Entries: 0
+  Order Entries: 0
+
+Message 2:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 3:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 4:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 5:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 6:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 7:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 8:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 9:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 10:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 11:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0
+
+Message 12:
+  Size: 0
+  Template: 0
+  Block Length: 0
+  MD Entries: 0
+  Order Entries: 0

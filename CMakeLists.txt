@@ -17,6 +17,7 @@ find_package(Threads REQUIRED)
 set(CORE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/core/include)
 set(PROTOCOLS_COMMON_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/common/include)
 set(PROTOCOLS_CME_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/cme/include)
+set(PROTOCOLS_REUTERS_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/reuters/include)
 
 # ===========================
 # Core Market Data Library
@@ -36,6 +37,7 @@ target_link_libraries(market_core Threads::Threads)
 # ===========================
 set(PROTOCOL_COMMON_SOURCES
     protocols/common/src/udp_transport.cpp
+    protocols/common/src/tcp_transport.cpp
 )
 
 add_library(protocol_common STATIC ${PROTOCOL_COMMON_SOURCES})
@@ -67,6 +69,25 @@ target_link_libraries(cme_protocol
 )
 
 # ===========================
+# Reuters Protocol Library
+# ===========================
+set(REUTERS_SOURCES
+    protocols/reuters/src/reuters_encoder.cpp
+    protocols/reuters/src/reuters_protocol_adapter.cpp
+)
+
+add_library(reuters_protocol STATIC ${REUTERS_SOURCES})
+target_include_directories(reuters_protocol PUBLIC 
+    ${PROTOCOLS_REUTERS_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}
+    ${CORE_INCLUDE_DIR}
+)
+target_link_libraries(reuters_protocol 
+    market_core 
+    protocol_common
+)
+
+# ===========================
 # CME Server Application
 # ===========================
 add_executable(cme_server
@@ -81,6 +102,26 @@ target_include_directories(cme_server PRIVATE
 
 target_link_libraries(cme_server
     cme_protocol
+    protocol_common
+    market_core
+    Threads::Threads
+)
+
+# ===========================
+# Reuters Server Application
+# ===========================
+add_executable(reuters_server
+    apps/reuters_server/reuters_server_main.cpp
+)
+
+target_include_directories(reuters_server PRIVATE
+    ${CORE_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}
+    ${PROTOCOLS_REUTERS_INCLUDE_DIR}
+)
+
+target_link_libraries(reuters_server
+    reuters_protocol
     protocol_common
     market_core
     Threads::Threads
@@ -165,6 +206,23 @@ endforeach()
 if(EXISTS ${CMAKE_SOURCE_DIR}/udp_receiver.cpp)
     add_executable(udp_receiver ${CMAKE_SOURCE_DIR}/test/udp_receiver.cpp)
     target_link_libraries(udp_receiver cme_legacy)
+endif()
+
+# ===========================
+# Reuters Test Client
+# ===========================
+if(EXISTS ${CMAKE_SOURCE_DIR}/test/reuters_client)
+    set(REUTERS_CLIENT_SOURCES
+        test/reuters_client/Main.cpp
+        test/reuters_client/Client.cpp
+        test/reuters_client/FIXMsg.cpp
+        test/reuters_client/NegotiateMsg.cpp
+        test/reuters_client/EstablishMsg.cpp
+        test/reuters_client/TerminateMsg.cpp
+    )
+    
+    add_executable(reuters_test_client ${REUTERS_CLIENT_SOURCES})
+    target_include_directories(reuters_test_client PRIVATE test/reuters_client)
 endif()
 
 # ===========================

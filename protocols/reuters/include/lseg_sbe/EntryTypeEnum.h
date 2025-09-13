@@ -1,0 +1,96 @@
+/* Generated SBE (Simple Binary Encoding) message codec */
+#ifndef _LSEG_SBE_ENTRYTYPEENUM_CXX_H_
+#define _LSEG_SBE_ENTRYTYPEENUM_CXX_H_
+
+#if !defined(__STDC_LIMIT_MACROS)
+#  define __STDC_LIMIT_MACROS 1
+#endif
+
+#include <cstdint>
+#include <iomanip>
+#include <limits>
+#include <ostream>
+#include <stdexcept>
+#include <sstream>
+#include <string>
+
+#define SBE_NULLVALUE_INT8 (std::numeric_limits<std::int8_t>::min)()
+#define SBE_NULLVALUE_INT16 (std::numeric_limits<std::int16_t>::min)()
+#define SBE_NULLVALUE_INT32 (std::numeric_limits<std::int32_t>::min)()
+#define SBE_NULLVALUE_INT64 (std::numeric_limits<std::int64_t>::min)()
+#define SBE_NULLVALUE_UINT8 (std::numeric_limits<std::uint8_t>::max)()
+#define SBE_NULLVALUE_UINT16 (std::numeric_limits<std::uint16_t>::max)()
+#define SBE_NULLVALUE_UINT32 (std::numeric_limits<std::uint32_t>::max)()
+#define SBE_NULLVALUE_UINT64 (std::numeric_limits<std::uint64_t>::max)()
+
+namespace lseg_sbe {
+
+class EntryTypeEnum
+{
+public:
+    enum Value
+    {
+        Bid = static_cast<char>(48),
+        Offer = static_cast<char>(49),
+        Trade = static_cast<char>(50),
+        OpeningPrice = static_cast<char>(52),
+        ClosingPrice = static_cast<char>(53),
+        HighPrice = static_cast<char>(55),
+        LowPrice = static_cast<char>(56),
+        VWAP = static_cast<char>(57),
+        LastTradedPrice = static_cast<char>(103),
+        NullMarket = static_cast<char>(74),
+        NULL_VALUE = static_cast<char>(0)
+    };
+
+    static EntryTypeEnum::Value get(const char value)
+    {
+        switch (value)
+        {
+            case static_cast<char>(48): return Bid;
+            case static_cast<char>(49): return Offer;
+            case static_cast<char>(50): return Trade;
+            case static_cast<char>(52): return OpeningPrice;
+            case static_cast<char>(53): return ClosingPrice;
+            case static_cast<char>(55): return HighPrice;
+            case static_cast<char>(56): return LowPrice;
+            case static_cast<char>(57): return VWAP;
+            case static_cast<char>(103): return LastTradedPrice;
+            case static_cast<char>(74): return NullMarket;
+            case static_cast<char>(0): return NULL_VALUE;
+        }
+
+        throw std::runtime_error("unknown value for enum EntryTypeEnum [E103]");
+    }
+
+    static const char *c_str(const EntryTypeEnum::Value value)
+    {
+        switch (value)
+        {
+            case Bid: return "Bid";
+            case Offer: return "Offer";
+            case Trade: return "Trade";
+            case OpeningPrice: return "OpeningPrice";
+            case ClosingPrice: return "ClosingPrice";
+            case HighPrice: return "HighPrice";
+            case LowPrice: return "LowPrice";
+            case VWAP: return "VWAP";
+            case LastTradedPrice: return "LastTradedPrice";
+            case NullMarket: return "NullMarket";
+            case NULL_VALUE: return "NULL_VALUE";
+        }
+
+        throw std::runtime_error("unknown value for enum EntryTypeEnum [E103]:");
+    }
+
+    template<typename CharT, typename Traits>
+    friend std::basic_ostream<CharT, Traits> & operator << (
+        std::basic_ostream<CharT, Traits> &os, EntryTypeEnum::Value m)
+    {
+        return os << EntryTypeEnum::c_str(m);
+    }
+};
+
+}
+
+#endif
