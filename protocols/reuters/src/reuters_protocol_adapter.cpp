@@ -2,6 +2,7 @@
 #include "../../protocols/common/include/tcp_transport.h"
 #include "../include/reuters_encoder.h"
 #include <algorithm>
+#include <iostream>
 #include <poll.h>
 #include <random>
 #include <sstream>
@@ -14,6 +15,18 @@ ReutersProtocolAdapter::ReutersProtocolAdapter(uint16_t port)
     , server_socket_(-1)
     , running_(false)
     , stats_ {}
+    , use_multicast_(false)
+{
+    stats_.start_time = std::chrono::steady_clock::now();
+}
+
+ReutersProtocolAdapter::ReutersProtocolAdapter(uint16_t port, const ReutersMulticastConfig& multicast_config)
+    : port_(port)
+    , server_socket_(-1)
+    , running_(false)
+    , stats_ {}
+    , use_multicast_(true)
+    , multicast_config_(multicast_config)
 {
     stats_.start_time = std::chrono::steady_clock::now();
 }
@@ -36,6 +49,26 @@ bool ReutersProtocolAdapter::initialize()
     }
 }
 
+bool ReutersProtocolAdapter::initialize_with_multicast()
+{
+    // Initialize TCP for session management
+    if (!initialize()) {
+        return false;
+    }
+
+    // Initialize multicast publisher if configured
+    if (use_multicast_) {
+        multicast_publisher_ = std::make_unique<ReutersMulticastPublisher>(multicast_config_);
+        if (!multicast_publisher_->initialize()) {
+            std::cerr << "Failed to initialize multicast publisher" << std::endl;
+            return false;
+        }
+        std::cout << "Reuters multicast publisher initialized successfully" << std::endl;
+    }
+
+    return true;
+}
+
 void ReutersProtocolAdapter::run_once()
 {
     if (!running_)
@@ -46,11 +79,27 @@ void ReutersProtocolAdapter::run_once()
     process_client_messages();
     send_heartbeats();
     cleanup_inactive_sessions();
+
+    // Send multicast heartbeats if needed
+    if (use_multicast_ && multicast_publisher_) {
+        static auto last_heartbeat = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - last_heartbeat).count() >= 30) {
+            multicast_publisher_->send_heartbeat();
+            last_heartbeat = now;
+        }
+    }
 }
 
 void ReutersProtocolAdapter::shutdown()
 {
     running_ = false;
+
+    // Shutdown multicast publisher
+    if (multicast_publisher_) {
+        multicast_publisher_->shutdown();
+        multicast_publisher_.reset();
+    }
 
     // Terminate all active sessions
     for (auto& [socket_fd, session] : sessions_) {
@@ -79,6 +128,35 @@ void ReutersProtocolAdapter::on_market_event(
 
     stats_.market_events_processed++;
 
+    // If multicast is enabled, publish to multicast channels
+    if (use_multicast_ && multicast_publisher_) {
+        switch (event->type) {
+        case market_core::MarketEvent::QUOTE_UPDATE: {
+            auto quote = std::static_pointer_cast<market_core::QuoteEvent>(event);
+            multicast_publisher_->publish_incremental(*quote);
+            break;
+        }
+        case market_core::MarketEvent::TRADE: {
+            auto trade = std::static_pointer_cast<market_core::TradeEvent>(event);
+            multicast_publisher_->publish_incremental(*trade);
+            break;
+        }
+        case market_core::MarketEvent::SNAPSHOT: {
+            auto snapshot = std::static_pointer_cast<market_core::SnapshotEvent>(event);
+            multicast_publisher_->publish_snapshot(*snapshot);
+            break;
+        }
+        case market_core::MarketEvent::STATISTICS: {
+            auto stats = std::static_pointer_cast<market_core::StatisticsEvent>(event);
+            multicast_publisher_->publish_statistics(*stats);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    // Also send to TCP sessions if they exist
     switch (event->type) {
     case market_core::MarketEvent::QUOTE_UPDATE: {
         auto quote = std::static_pointer_cast<market_core::QuoteEvent>(event);

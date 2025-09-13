@@ -1,0 +1,184 @@
+{
+  "network": {
+    "session_tcp": {
+      "port": 11501,
+      "description": "TCP port for session management (Negotiate/Establish)"
+    },
+    "incremental_feed_a": {
+      "ip": "239.100.1.1",
+      "port": 15001,
+      "interface": "0.0.0.0",
+      "description": "Primary multicast channel for incremental updates"
+    },
+    "incremental_feed_b": {
+      "ip": "239.100.1.2",
+      "port": 15002,
+      "interface": "0.0.0.0",
+      "description": "Backup multicast channel for incremental updates (redundancy)"
+    },
+    "security_definition_feed": {
+      "ip": "239.100.1.10",
+      "port": 15010,
+      "interface": "0.0.0.0",
+      "description": "Multicast channel for security definitions"
+    },
+    "snapshot_feed": {
+      "ip": "239.100.1.20",
+      "port": 15020,
+      "interface": "0.0.0.0",
+      "description": "Multicast channel for market data snapshots"
+    }
+  },
+  "channels": [
+    {
+      "id": 1,
+      "name": "FX_SPOT_MAJOR",
+      "description": "Major FX pairs (EUR, GBP, JPY, CHF)",
+      "multicast_group_a": "239.100.2.1",
+      "multicast_group_b": "239.100.2.2",
+      "instruments": ["EURUSD", "GBPUSD", "USDJPY", "USDCHF"]
+    },
+    {
+      "id": 2,
+      "name": "FX_SPOT_COMMODITY",
+      "description": "Commodity currencies (AUD, NZD, CAD)",
+      "multicast_group_a": "239.100.3.1",
+      "multicast_group_b": "239.100.3.2",
+      "instruments": ["AUDUSD", "NZDUSD", "USDCAD"]
+    },
+    {
+      "id": 3,
+      "name": "FX_SPOT_EMERGING",
+      "description": "Emerging market currencies",
+      "multicast_group_a": "239.100.4.1",
+      "multicast_group_b": "239.100.4.2",
+      "instruments": ["USDMXN", "USDZAR", "USDCNH", "USDBRL", "USDINR"]
+    }
+  ],
+  "market_data": {
+    "incremental_interval_ms": 10,
+    "snapshot_interval_seconds": 60,
+    "heartbeat_interval_seconds": 30,
+    "max_recovery_messages": 1000,
+    "conflation_interval_ms": 0,
+    "book_depth": 10
+  },
+  "session": {
+    "keepalive_interval_ms": 30000,
+    "session_timeout_ms": 60000,
+    "max_sessions": 100,
+    "enable_authentication": false
+  },
+  "instruments": [
+    {
+      "symbol": "EURUSD",
+      "security_id": 1001,
+      "channel_id": 1,
+      "currency1": "EUR",
+      "currency2": "USD",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "GBPUSD",
+      "security_id": 1002,
+      "channel_id": 1,
+      "currency1": "GBP",
+      "currency2": "USD",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDJPY",
+      "security_id": 1003,
+      "channel_id": 1,
+      "currency1": "USD",
+      "currency2": "JPY",
+      "tick_size": 0.001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDCHF",
+      "security_id": 1004,
+      "channel_id": 1,
+      "currency1": "USD",
+      "currency2": "CHF",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "AUDUSD",
+      "security_id": 1005,
+      "channel_id": 2,
+      "currency1": "AUD",
+      "currency2": "USD",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "NZDUSD",
+      "security_id": 1006,
+      "channel_id": 2,
+      "currency1": "NZD",
+      "currency2": "USD",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDCAD",
+      "security_id": 1007,
+      "channel_id": 2,
+      "currency1": "USD",
+      "currency2": "CAD",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 100000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDMXN",
+      "security_id": 1008,
+      "channel_id": 3,
+      "currency1": "USD",
+      "currency2": "MXN",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 50000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDZAR",
+      "security_id": 1009,
+      "channel_id": 3,
+      "currency1": "USD",
+      "currency2": "ZAR",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 50000000,
+      "settlement": "T+2"
+    },
+    {
+      "symbol": "USDCNH",
+      "security_id": 1010,
+      "channel_id": 3,
+      "currency1": "USD",
+      "currency2": "CNH",
+      "tick_size": 0.00001,
+      "min_size": 1000,
+      "max_size": 50000000,
+      "settlement": "T+2"
+    }
+  ]
+}

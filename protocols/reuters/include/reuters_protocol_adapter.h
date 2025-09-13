@@ -7,6 +7,7 @@
 #include "lseg_sbe/MessageHeader.h"
 #include "lseg_sbe/Negotiate.h"
 #include "reuters_encoder.h"
+#include "reuters_multicast_publisher.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -52,6 +53,7 @@ struct ClientSession {
 class ReutersProtocolAdapter : public market_core::IMarketEventListener {
 public:
     explicit ReutersProtocolAdapter(uint16_t port = 11501);
+    ReutersProtocolAdapter(uint16_t port, const ReutersMulticastConfig& multicast_config);
     ~ReutersProtocolAdapter();
 
     // IMarketEventListener implementation
@@ -59,6 +61,7 @@ public:
 
     // Single-threaded server operations
     bool initialize();
+    bool initialize_with_multicast(); // Initialize with multicast support
     void run_once(); // Process one iteration of server loop
     void shutdown();
 
@@ -78,6 +81,9 @@ private:
     int server_socket_;
     bool running_;
     Statistics stats_;
+    bool use_multicast_;
+    ReutersMulticastConfig multicast_config_;
+    std::unique_ptr<ReutersMulticastPublisher> multicast_publisher_;
 
     std::unordered_map<int, std::unique_ptr<ClientSession>> sessions_;
 

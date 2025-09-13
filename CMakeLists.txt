@@ -38,6 +38,7 @@ target_link_libraries(market_core Threads::Threads)
 set(PROTOCOL_COMMON_SOURCES
     protocols/common/src/udp_transport.cpp
     protocols/common/src/tcp_transport.cpp
+    protocols/common/src/udp_multicast_transport.cpp
 )
 
 add_library(protocol_common STATIC ${PROTOCOL_COMMON_SOURCES})
@@ -74,6 +75,7 @@ target_link_libraries(cme_protocol
 set(REUTERS_SOURCES
     protocols/reuters/src/reuters_encoder.cpp
     protocols/reuters/src/reuters_protocol_adapter.cpp
+    protocols/reuters/src/reuters_multicast_publisher.cpp
 )
 
 add_library(reuters_protocol STATIC ${REUTERS_SOURCES})
@@ -121,6 +123,24 @@ target_include_directories(reuters_server PRIVATE
 )
 
 target_link_libraries(reuters_server
+    reuters_protocol
+    protocol_common
+    market_core
+    Threads::Threads
+)
+
+# Reuters Server with Multicast
+add_executable(reuters_server_multicast
+    apps/reuters_server/reuters_server_multicast_main.cpp
+)
+
+target_include_directories(reuters_server_multicast PRIVATE
+    ${CORE_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}
+    ${PROTOCOLS_REUTERS_INCLUDE_DIR}
+)
+
+target_link_libraries(reuters_server_multicast
     reuters_protocol
     protocol_common
     market_core
