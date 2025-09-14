@@ -7,6 +7,8 @@
 #include <iostream>
 #include <signal.h>
 #include <thread>
+#include <random>
+#include <algorithm>
 
 std::atomic<bool> running(true);
 
@@ -82,7 +84,7 @@ reuters_protocol::ReutersMulticastConfig load_multicast_config(const std::string
         channel2_b.instruments = { "AUDUSD", "NZDUSD", "USDCAD" };
         config.channel_feeds_b.push_back(channel2_b);
 
-        config.incremental_interval_ms = 10;
+        config.incremental_interval_ms = 100; // Slower rate: 10 events/sec instead of 100
         config.snapshot_interval_seconds = 60;
         config.heartbeat_interval_seconds = 30;
         config.book_depth = 10;
@@ -157,6 +159,20 @@ int main(int argc, char* argv[])
 
         std::cout << "Created " << book_manager->get_all_instrument_ids().size() << " FX instruments" << std::endl;
 
+        // Create order books for all instruments
+        std::cout << "Creating order books..." << std::endl;
+        market_core::OrderBook::Config book_config;
+        book_config.max_visible_levels = 10;
+        book_config.track_market_makers = true; // Enable for Reuters
+        
+        for (const auto& instrument_id : book_manager->get_all_instrument_ids()) {
+            if (book_manager->create_order_book(instrument_id, book_config)) {
+                std::cout << "Created order book for instrument " << instrument_id << std::endl;
+            } else {
+                std::cerr << "Failed to create order book for instrument " << instrument_id << std::endl;
+            }
+        }
+
         // Initialize market data
         data_generator->set_market_mode(market_core::MarketMode::NORMAL);
         std::cout << "Generating initial market state..." << std::endl;
@@ -180,7 +196,7 @@ int main(int argc, char* argv[])
 
         // Convert to shared_ptr for listener management
         std::shared_ptr<reuters_protocol::ReutersProtocolAdapter> reuters_shared(reuters_adapter.release());
-        data_generator->add_listener(reuters_shared);
+        data_generator->add_listener(std::weak_ptr<market_core::IMarketEventListener>(reuters_shared));
 
         // Initialize with multicast support
         if (!reuters_shared->initialize_with_multicast()) {
@@ -217,9 +233,20 @@ int main(int argc, char* argv[])
             // Process Reuters protocol (TCP connections, sessions)
             reuters_shared->run_once();
 
-            // Generate market data updates
+            // Generate market data updates (reduced frequency)
             if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_market_update).count() >= multicast_config.incremental_interval_ms) {
-                data_generator->generate_all_instruments();
+                // Generate updates for only 1-2 instruments at a time instead of all 7
+                auto instrument_ids = book_manager->get_all_instrument_ids();
+                if (!instrument_ids.empty()) {
+                    // Pick 2 random instruments per update cycle
+                    auto time_seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+                    std::default_random_engine generator(time_seed);
+                    std::shuffle(instrument_ids.begin(), instrument_ids.end(), generator);
+                    
+                    for (size_t i = 0; i < std::min(size_t(2), instrument_ids.size()); ++i) {
+                        data_generator->generate_update(instrument_ids[i]);
+                    }
+                }
                 last_market_update = now;
             }
 

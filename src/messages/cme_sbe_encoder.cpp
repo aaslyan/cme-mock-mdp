@@ -114,7 +114,6 @@ std::vector<uint8_t> CMESBEEncoder::encode_snapshot_full_refresh(
         // Apply CME 8-byte alignment requirement
         // "Market Data Incremental Refresh messages are padded to byte boundaries in multiples of 8 byte units"
         size_t message_length = ((sbe_length + 7) / 8) * 8; // Round up to next multiple of 8
-        size_t padding_needed = message_length - sbe_length;
 
         // Resize buffer to include SBE message + padding
         size_t total_length = header_size + message_length;
@@ -202,7 +201,6 @@ std::vector<uint8_t> CMESBEEncoder::encode_incremental_refresh(
         // Apply CME 8-byte alignment requirement
         // "Market Data Incremental Refresh messages are padded to byte boundaries in multiples of 8 byte units"
         size_t message_length = ((sbe_length + 7) / 8) * 8; // Round up to next multiple of 8
-        size_t padding_needed = message_length - sbe_length;
 
         // Resize buffer to include SBE message + padding
         size_t total_length = header_size + message_length;

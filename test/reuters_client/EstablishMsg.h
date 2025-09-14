@@ -1,15 +1,14 @@
 #pragma once
 
 #include "FIXMsg.h"
-#include <chrono>
 #include <boost/endian/conversion.hpp>
 #include <boost/predef/other/endian.h>
+#include <chrono>
 
-struct EstablishMsg : public FIXMsg
-{
- 
+struct EstablishMsg : public FIXMsg {
+
     EstablishMsg();
-    virtual ~EstablishMsg(){}
+    virtual ~EstablishMsg() { }
 
     // Common fields
     uint8_t m_msgType = 'E';
@@ -26,10 +25,10 @@ struct EstablishMsg : public FIXMsg
 
     void pack();
     void unpack(uint8_t* buffer);
-   
+
     void unpackEstablish(uint8_t* buffer);
     void unpackEstablishReject(uint8_t* buffer);
-    
+
     void packEstablish(uint8_t* buffer);
     void packEstablishReject(uint8_t* buffer);
 };

@@ -117,9 +117,6 @@ std::vector<uint8_t> MDPMessageEncoder::encode_snapshot_full_refresh(
 
     SBEEncoder encoder;
 
-    // Determine if this is an FX instrument (Channel 330, security IDs 31-40)
-    bool is_fx_instrument = (snapshot.security_id >= 31 && snapshot.security_id <= 40);
-
     // Force Schema Version 13 for all instruments to match gateway client expectations
     uint16_t template_id = TEMPLATE_FX_SNAPSHOT_FULL_REFRESH; // Always use FX template (52)
     uint16_t schema_id = MDP_SCHEMA_ID_FX; // Always use FX schema (1)

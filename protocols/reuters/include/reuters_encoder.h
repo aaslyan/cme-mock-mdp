@@ -11,7 +11,7 @@ namespace reuters_protocol {
 
 class ReutersEncoder {
 public:
-    static constexpr size_t MAX_MESSAGE_SIZE = 1400;
+    static constexpr size_t MAX_MESSAGE_SIZE = 65536; // 64KB - much larger buffer
     static constexpr uint16_t SCHEMA_ID = 101;
     static constexpr uint16_t SCHEMA_VERSION = 52;
     static constexpr uint16_t BIG_ENDIAN_ENCODING = 23520;

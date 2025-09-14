@@ -1,22 +1,21 @@
 #pragma once
 
 #include "FIXMsg.h"
-#include <chrono>
 #include <boost/endian/conversion.hpp>
 #include <boost/predef/other/endian.h>
+#include <chrono>
 
 constexpr size_t NegotiateMsgLength = 78;
 
-struct NegotiateMsg : public FIXMsg
-{
+struct NegotiateMsg : public FIXMsg {
     NegotiateMsg();
-    virtual ~NegotiateMsg(){};
-    
+    virtual ~NegotiateMsg() {};
+
     // Common fields to Negotiate, Negotiation Response, and Negotiation Reject
     uint8_t m_msgType = 'N';
     uint8_t m_sessionId[21]; // Session ID UUID
     uint64_t m_timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    
+
     // Negotiate and Negotiation Response Message Fields
     uint8_t m_flowType = 'U'; // Unsequenced flow type
     uint8_t m_credentialsUsername[12];

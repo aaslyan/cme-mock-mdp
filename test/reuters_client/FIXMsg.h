@@ -1,11 +1,10 @@
 #pragma once
-#include <cstdint>
 #include <arpa/inet.h>
+#include <cstdint>
 #include <cstring>
 
 constexpr size_t MAX_BUFFER_SIZE = 1024;
-struct FIXMsg
-{
+struct FIXMsg {
 
     // SOFH header fields
     uint32_t m_msgLength; // To be set by specific msg
@@ -21,9 +20,8 @@ struct FIXMsg
     uint16_t m_noOfVarData;
     uint8_t m_buffer[MAX_BUFFER_SIZE];
 
-
     void packHeaders();
-    
+
     void unpackHeaders(uint8_t* buffer);
     uint8_t* getBuffer();
     virtual void pack() = 0;

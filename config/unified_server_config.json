@@ -1,0 +1,120 @@
+{
+  "server": {
+    "protocol": "cme",
+    "name": "Market Data Platform",
+    "version": "2.0.0",
+    "log_level": "info"
+  },
+  "protocols": {
+    "cme": {
+      "schema_id": 1,
+      "schema_version": 13,
+      "channel_id": 310,
+      "batch_size": 5
+    },
+    "reuters": {
+      "schema_version": "1.0",
+      "application_id": "REUTERS_MD",
+      "batch_size": 3
+    },
+    "utp": {
+      "schema_id": 101,
+      "schema_version": 1,
+      "application_id": 18,
+      "batch_size": 1
+    }
+  },
+  "network": {
+    "mode": "multicast",
+    "incremental_feed": {
+      "ip": "224.0.28.64",
+      "port": 14310,
+      "interface": "0.0.0.0"
+    },
+    "snapshot_feed": {
+      "ip": "224.0.28.69",
+      "port": 14320,
+      "interface": "0.0.0.0"
+    },
+    "definition_feed": {
+      "ip": "224.0.28.70",
+      "port": 14330,
+      "interface": "0.0.0.0"
+    }
+  },
+  "market_data": {
+    "market_mode": "normal",
+    "updates_per_second": 10,
+    "snapshot_interval_seconds": 30,
+    "heartbeat_interval_seconds": 10,
+    "max_book_depth": 10,
+    "price_precision": 5
+  },
+  "instruments": [
+    {
+      "instrument_id": 1,
+      "symbol": "EURUSD",
+      "description": "EUR/USD Spot FX",
+      "type": "fx_spot",
+      "base_currency": "EUR",
+      "quote_currency": "USD",
+      "tick_size": 0.00001,
+      "contract_size": 100000,
+      "initial_price": 1.0850,
+      "initial_spread": 0.00002,
+      "price_decimals": 5,
+      "enabled": true
+    },
+    {
+      "instrument_id": 2,
+      "symbol": "GBPUSD",
+      "description": "GBP/USD Spot FX",
+      "type": "fx_spot",
+      "base_currency": "GBP",
+      "quote_currency": "USD",
+      "tick_size": 0.00001,
+      "contract_size": 100000,
+      "initial_price": 1.2650,
+      "initial_spread": 0.00002,
+      "price_decimals": 5,
+      "enabled": true
+    },
+    {
+      "instrument_id": 3,
+      "symbol": "ESZ4",
+      "description": "E-mini S&P 500 Dec 2024",
+      "type": "futures",
+      "underlying": "SPX",
+      "tick_size": 0.25,
+      "contract_size": 50.0,
+      "multiplier": 50.0,
+      "initial_price": 4500.0,
+      "initial_spread": 0.50,
+      "price_decimals": 2,
+      "maturity_date": "2024-12-20",
+      "initial_margin": 13200.0,
+      "maintenance_margin": 12000.0,
+      "enabled": true
+    }
+  ],
+  "scenarios": {
+    "normal": {
+      "volatility": 0.02,
+      "trend_strength": 0.01,
+      "spread_multiplier": 1.0,
+      "update_probability": 0.3
+    },
+    "volatile": {
+      "volatility": 0.05,
+      "trend_strength": 0.02,
+      "spread_multiplier": 1.5,
+      "update_probability": 0.7
+    },
+    "trending": {
+      "volatility": 0.015,
+      "trend_strength": 0.05,
+      "spread_multiplier": 1.2,
+      "update_probability": 0.4
+    }
+  }
+}

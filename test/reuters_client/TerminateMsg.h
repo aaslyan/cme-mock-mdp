@@ -1,13 +1,11 @@
 #pragma once
 
 #include "FIXMsg.h"
-#include <chrono>
 #include <boost/endian/conversion.hpp>
 #include <boost/predef/other/endian.h>
+#include <chrono>
 
-
-struct TerminateMsg : public FIXMsg
-{
+struct TerminateMsg : public FIXMsg {
 
     uint8_t m_msgType;
     uint8_t m_sessionId[21]; // Session ID UUID

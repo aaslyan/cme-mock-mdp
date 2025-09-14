@@ -9,8 +9,8 @@
 #include "core/market_data_generator.h"
 #include "core/order_book_manager.h"
 #include "core/reference_data.h"
-#include "network/feed_publisher.h"
 #include "network/definition_feed_publisher.h"
+#include "network/feed_publisher.h"
 #include "scenarios/market_scenario.h"
 #include "utils/logger.h"
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     // Set logging level and global verbose flag
     extern bool g_verbose_mode;
     g_verbose_mode = verbose;
-    
+
     if (verbose) {
         cme_mock::Logger::instance().set_level(cme_mock::LogLevel::DEBUG);
     } else {

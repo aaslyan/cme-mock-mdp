@@ -30,11 +30,10 @@ TEST_BOOK_SRCS = test/test_order_book.cpp
 TEST_MDP_SRCS = test/test_mdp_encoding.cpp
 TEST_CLIENT_SRCS = test/cme_test_client.cpp
 DEBUG_CLIENT_SRCS = test/debug_client.cpp
-DEBUG_INC_SRCS = test/debug_incremental.cpp
+DEBUG_SNAPSHOT_SRCS = test/debug_snapshot_client.cpp
 TEST_REF_DATA_SRCS = test/test_reference_data.cpp
 TEST_SCENARIOS_SRCS = test/test_scenarios.cpp
 LIST_INSTRUMENTS_SRCS = test/list_instruments.cpp
-TEST_SBE_SRCS = test/test_sbe_generated.cpp
 
 # Object files
 LIB_OBJS = $(LIB_SRCS:.cpp=.o)
@@ -44,14 +43,13 @@ TEST_BOOK_OBJS = $(TEST_BOOK_SRCS:.cpp=.o)
 TEST_MDP_OBJS = $(TEST_MDP_SRCS:.cpp=.o)
 TEST_CLIENT_OBJS = $(TEST_CLIENT_SRCS:.cpp=.o)
 DEBUG_CLIENT_OBJS = $(DEBUG_CLIENT_SRCS:.cpp=.o)
-DEBUG_INC_OBJS = $(DEBUG_INC_SRCS:.cpp=.o)
+DEBUG_SNAPSHOT_OBJS = $(DEBUG_SNAPSHOT_SRCS:.cpp=.o)
 TEST_REF_DATA_OBJS = $(TEST_REF_DATA_SRCS:.cpp=.o)
 TEST_SCENARIOS_OBJS = $(TEST_SCENARIOS_SRCS:.cpp=.o)
 LIST_INSTRUMENTS_OBJS = $(LIST_INSTRUMENTS_SRCS:.cpp=.o)
-TEST_SBE_OBJS = $(TEST_SBE_SRCS:.cpp=.o)
 
 # Targets
-TARGETS = cme_mock_server cme_test_client debug_client debug_incremental test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data test_scenarios list_instruments test_sbe_generated
+TARGETS = cme_mock_server cme_test_client debug_client debug_snapshot_client test_udp_publisher udp_receiver test_order_book test_mdp_encoding test_reference_data test_scenarios list_instruments
 
 all: $(TARGETS)
 
@@ -64,7 +62,7 @@ cme_test_client: $(TEST_CLIENT_OBJS) $(LIB_OBJS)
 debug_client: $(DEBUG_CLIENT_OBJS) $(LIB_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-debug_incremental: $(DEBUG_INC_OBJS) $(LIB_OBJS)
+debug_snapshot_client: $(DEBUG_SNAPSHOT_OBJS) $(LIB_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 test_udp_publisher: $(TEST_UDP_OBJS) $(LIB_OBJS)
@@ -88,8 +86,6 @@ test_scenarios: $(TEST_SCENARIOS_OBJS) $(LIB_OBJS)
 list_instruments: $(LIST_INSTRUMENTS_OBJS) $(LIB_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-test_sbe_generated: $(TEST_SBE_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
 
 test_sbe_encoding: test/test_sbe_encoding.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -98,7 +94,7 @@ test_sbe_encoding: test/test_sbe_encoding.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(LIB_OBJS) $(TEST_UDP_OBJS) $(RECEIVER_OBJS) $(TEST_BOOK_OBJS) $(TEST_MDP_OBJS) $(TEST_CLIENT_OBJS) $(DEBUG_CLIENT_OBJS) $(DEBUG_INC_OBJS) $(TEST_REF_DATA_OBJS) $(TEST_SCENARIOS_OBJS) $(LIST_INSTRUMENTS_OBJS) src/main.o $(TARGETS)
+	rm -f $(LIB_OBJS) $(TEST_UDP_OBJS) $(RECEIVER_OBJS) $(TEST_BOOK_OBJS) $(TEST_MDP_OBJS) $(TEST_CLIENT_OBJS) $(DEBUG_CLIENT_OBJS) $(DEBUG_SNAPSHOT_OBJS) $(TEST_REF_DATA_OBJS) $(TEST_SCENARIOS_OBJS) $(LIST_INSTRUMENTS_OBJS) src/main.o $(TARGETS)
 
 test: all
 	@echo "Starting UDP receiver in background..."
@@ -111,5 +107,3 @@ test: all
 
 .PHONY: all clean test
 
-debug_snapshot_client: test/debug_snapshot_client.o $(LIB_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^

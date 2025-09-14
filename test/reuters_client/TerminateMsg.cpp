@@ -3,13 +3,13 @@
 void TerminateMsg::unpack(uint8_t* buffer)
 {
     unpackHeaders(buffer);
-    m_msgType = *((uint8_t *)&buffer[22]);
-    
+    m_msgType = *((uint8_t*)&buffer[22]);
+
     memcpy(m_sessionId, &buffer[23], 20);
     m_sessionId[20] = 0;
 
     m_terminationCode = *((uint8_t*)&buffer[43]);
-    
+
     m_reasonLength = ntohs(*((uint16_t*)&buffer[44]));
 
     memset(m_reason, 0, 1024);

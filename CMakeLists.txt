@@ -18,6 +18,7 @@ set(CORE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/core/include)
 set(PROTOCOLS_COMMON_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/common/include)
 set(PROTOCOLS_CME_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/cme/include)
 set(PROTOCOLS_REUTERS_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/reuters/include)
+set(PROTOCOLS_UTP_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/protocols/utp/include)
 
 # ===========================
 # Core Market Data Library
@@ -90,6 +91,25 @@ target_link_libraries(reuters_protocol
 )
 
 # ===========================
+# UTP Protocol Library
+# ===========================
+set(UTP_SOURCES
+    protocols/utp/src/utp_simple.cpp
+)
+
+add_library(utp_protocol STATIC ${UTP_SOURCES})
+target_include_directories(utp_protocol PUBLIC 
+    ${PROTOCOLS_UTP_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}
+    ${CORE_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include  # For SBE sbe.h header
+)
+target_link_libraries(utp_protocol 
+    market_core 
+    protocol_common
+)
+
+# ===========================
 # CME Server Application
 # ===========================
 add_executable(cme_server
@@ -142,6 +162,69 @@ target_include_directories(reuters_server_multicast PRIVATE
 
 target_link_libraries(reuters_server_multicast
     reuters_protocol
+    protocol_common
+    market_core
+    Threads::Threads
+)
+
+# ===========================
+# Unified Server Application (full JSON config support)
+# ===========================
+add_executable(unified_server
+    apps/unified_server/unified_server_main.cpp
+)
+
+target_include_directories(unified_server PRIVATE
+    ${CORE_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}
+    ${PROTOCOLS_CME_INCLUDE_DIR}
+    ${PROTOCOLS_REUTERS_INCLUDE_DIR}
+    ${PROTOCOLS_UTP_INCLUDE_DIR}
+)
+
+# Find nlohmann/json for configuration parsing
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+    # Try to find it as a header-only library
+    find_path(NLOHMANN_JSON_INCLUDE_DIR NAMES nlohmann/json.hpp)
+    if(NLOHMANN_JSON_INCLUDE_DIR)
+        target_include_directories(unified_server PRIVATE ${NLOHMANN_JSON_INCLUDE_DIR})
+    else()
+        message(STATUS "nlohmann/json not found - unified server may not compile")
+    endif()
+else()
+    target_link_libraries(unified_server nlohmann_json::nlohmann_json)
+endif()
+
+target_link_libraries(unified_server
+    cme_protocol
+    reuters_protocol
+    utp_protocol
+    protocol_common
+    market_core
+    Threads::Threads
+)
+
+# ===========================
+# Simple Unified Server (command-line config, all protocols)
+# ===========================
+add_executable(simple_unified_server
+    apps/unified_server/simple_unified_server.cpp
+)
+
+target_include_directories(simple_unified_server PRIVATE
+    ${CORE_INCLUDE_DIR}
+    ${PROTOCOLS_COMMON_INCLUDE_DIR}  
+    ${PROTOCOLS_CME_INCLUDE_DIR}
+    ${PROTOCOLS_REUTERS_INCLUDE_DIR}
+    ${PROTOCOLS_UTP_INCLUDE_DIR}
+    test/utp_client  # For UTP message definitions
+)
+
+target_link_libraries(simple_unified_server
+    cme_protocol
+    reuters_protocol  
+    utp_protocol
     protocol_common
     market_core
     Threads::Threads
@@ -243,6 +326,22 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/test/reuters_client)
     
     add_executable(reuters_test_client ${REUTERS_CLIENT_SOURCES})
     target_include_directories(reuters_test_client PRIVATE test/reuters_client)
+endif()
+
+# ===========================
+# UTP Test Client
+# ===========================
+if(EXISTS ${CMAKE_SOURCE_DIR}/test/utp_client)
+    set(UTP_CLIENT_SOURCES
+        test/utp_client/UTPClient.cpp
+        test/utp_client/utp_client_main.cpp
+    )
+    
+    add_executable(utp_test_client ${UTP_CLIENT_SOURCES})
+    target_include_directories(utp_test_client PRIVATE test/utp_client)
+    target_compile_features(utp_test_client PRIVATE cxx_std_17)
+    target_compile_options(utp_test_client PRIVATE -Wall -Wextra -O2 -pthread)
+    target_link_libraries(utp_test_client PRIVATE pthread)
 endif()
 
 # ===========================

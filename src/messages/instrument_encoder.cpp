@@ -5,7 +5,7 @@
 
 namespace cme_mock {
 
-bool InstrumentEncoder::is_spread_instrument(const std::string& symbol)
+bool InstrumentEncoder::is_spread_instrument(const std::string& /* symbol */)
 {
     // For now, treat all as futures - simplified approach
     return false;
@@ -89,7 +89,7 @@ void InstrumentEncoder::populate_future_message(
     sbe_msg.putAsset(group.c_str());
 
     // Set security type
-    sbe_msg.putSecurityType("FUT");
+    sbe_msg.putSecurityType(std::string("FUT"));
 
     // Set CFI code
     sbe_msg.putCFICode("FFIXSX");
@@ -98,7 +98,7 @@ void InstrumentEncoder::populate_future_message(
     sbe_msg.putCurrency("USD");
 
     // Set minimal required fields with default values
-    sbe_msg.putUnitOfMeasure("BBL"); // Barrel unit for futures
+    sbe_msg.putUnitOfMeasure(std::string("BBL")); // Barrel unit for futures
     sbe_msg.minPriceIncrement().mantissa(250000000); // 0.25 scaled
     sbe_msg.displayFactor().mantissa(1000000000);
     sbe_msg.mainFraction(4);
