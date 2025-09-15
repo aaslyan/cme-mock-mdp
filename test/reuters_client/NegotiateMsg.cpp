@@ -1,4 +1,5 @@
 #include "NegotiateMsg.h"
+#include "endian_utils.h"
 #include <iostream>
 
 void NegotiateMsg::unpackNegotiate(uint8_t* buffer)
@@ -28,7 +29,7 @@ void NegotiateMsg::unpack(uint8_t* buffer)
     memcpy(m_sessionId, &buffer[23], 20);
     m_sessionId[20] = 0;
 
-    m_timestamp = boost::endian::big_to_native(*((uint64_t*)&buffer[43]));
+    m_timestamp = endian_utils::big_to_native<uint64_t>(*((uint64_t*)&buffer[43]));
 
     if (m_msgType == 'O') {
         std::cout << "Negotiation Response Msg was Decoded\n";
@@ -49,7 +50,7 @@ void NegotiateMsg::pack()
     memset(&m_buffer[22], m_msgType, 1);
     memcpy(&m_buffer[23], m_sessionId, 20);
 
-    uint64_t nTimestamp = boost::endian::native_to_big(m_timestamp);
+    uint64_t nTimestamp = endian_utils::native_to_big(m_timestamp);
     memcpy(&m_buffer[43], &nTimestamp, 8);
 
     memset(&m_buffer[51], m_flowType, 1);

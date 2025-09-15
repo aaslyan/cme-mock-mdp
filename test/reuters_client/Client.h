@@ -2,8 +2,6 @@
 
 #include "FIXMsg.h"
 #include "NegotiateMsg.h"
-#include <boost/endian/conversion.hpp>
-#include <boost/predef/other/endian.h>
 #include <chrono>
 
 class Client {

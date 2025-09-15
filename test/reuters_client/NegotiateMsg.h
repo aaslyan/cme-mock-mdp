@@ -1,8 +1,6 @@
 #pragma once
 
 #include "FIXMsg.h"
-#include <boost/endian/conversion.hpp>
-#include <boost/predef/other/endian.h>
 #include <chrono>
 
 constexpr size_t NegotiateMsgLength = 78;
