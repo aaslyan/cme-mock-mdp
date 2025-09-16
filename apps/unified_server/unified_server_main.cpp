@@ -3,12 +3,13 @@
 #include "../../core/include/order_book_manager.h"
 #include "../../protocols/cme/include/cme_event_listener.h"
 #include "../../protocols/cme/include/cme_protocol_adapter.h"
+#include "../../protocols/common/include/tcp_transport.h"
+#include "../../protocols/common/include/udp_multicast_transport.h"
+#include "../../protocols/common/include/udp_transport.h"
 #include "../../protocols/reuters/include/reuters_protocol_adapter.h"
 #include "../../protocols/utp/include/utp_protocol_adapter.h"
-#include "../../protocols/common/include/udp_transport.h"
-#include "../../protocols/common/include/udp_multicast_transport.h"
-#include "../../protocols/common/include/tcp_transport.h"
 
+#include "native_json.h"
 #include <atomic>
 #include <chrono>
 #include <fstream>
@@ -18,9 +19,8 @@
 #include <signal.h>
 #include <thread>
 #include <vector>
-#include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
+using json = native_json::JsonValue;
 
 // Global shutdown flag
 std::atomic<bool> g_running { true };
@@ -56,7 +56,7 @@ struct ServerConfig {
     int snapshot_interval_seconds = 30;
     int heartbeat_interval_seconds = 10;
     int max_book_depth = 10;
-    
+
     struct NetworkConfig {
         std::string incremental_ip = "224.0.28.64";
         uint16_t incremental_port = 14310;
@@ -66,7 +66,7 @@ struct ServerConfig {
         uint16_t definition_port = 14330;
         std::string interface_ip = "0.0.0.0";
     } network;
-    
+
     struct ProtocolConfig {
         int schema_id = 1;
         int schema_version = 13;
@@ -74,181 +74,211 @@ struct ServerConfig {
         int application_id = 18;
         int batch_size = 5;
     } protocol_config;
-    
+
     std::vector<std::shared_ptr<market_core::Instrument>> instruments;
 };
 
 ServerConfig load_config(const std::string& config_file)
 {
     ServerConfig config;
-    
+
     try {
         std::ifstream file(config_file);
         if (!file.is_open()) {
-            std::cerr << "Warning: Could not open config file '" << config_file 
+            std::cerr << "Warning: Could not open config file '" << config_file
                       << "', using defaults\n";
             return config;
         }
-        
-        json j;
-        file >> j;
-        
+
+        auto j = native_json::parse_file(config_file);
+
         // Load server config
-        if (j.contains("server")) {
-            const auto& server = j["server"];
-            if (server.contains("protocol")) {
-                config.protocol = server["protocol"];
+        if (j->contains("server")) {
+            const auto server = j->operator[]("server");
+            if (server && server->contains("protocol")) {
+                config.protocol = server->operator[]("protocol")->as_string();
             }
         }
-        
+
         // Load network config
-        if (j.contains("network")) {
-            const auto& network = j["network"];
-            if (network.contains("incremental_feed")) {
-                const auto& inc = network["incremental_feed"];
-                if (inc.contains("ip")) config.network.incremental_ip = inc["ip"];
-                if (inc.contains("port")) config.network.incremental_port = inc["port"];
+        if (j->contains("network")) {
+            const auto network = j->operator[]("network");
+            if (network && network->contains("incremental_feed")) {
+                const auto inc = network->operator[]("incremental_feed");
+                if (inc && inc->contains("ip"))
+                    config.network.incremental_ip = inc->operator[]("ip")->as_string();
+                if (inc && inc->contains("port"))
+                    config.network.incremental_port = static_cast<int>(*inc->operator[]("port"));
             }
-            if (network.contains("snapshot_feed")) {
-                const auto& snap = network["snapshot_feed"];
-                if (snap.contains("ip")) config.network.snapshot_ip = snap["ip"];
-                if (snap.contains("port")) config.network.snapshot_port = snap["port"];
+            if (network && network->contains("snapshot_feed")) {
+                const auto snap = network->operator[]("snapshot_feed");
+                if (snap && snap->contains("ip"))
+                    config.network.snapshot_ip = snap->operator[]("ip")->as_string();
+                if (snap && snap->contains("port"))
+                    config.network.snapshot_port = static_cast<int>(*snap->operator[]("port"));
             }
-            if (network.contains("definition_feed")) {
-                const auto& def = network["definition_feed"];
-                if (def.contains("ip")) config.network.definition_ip = def["ip"];
-                if (def.contains("port")) config.network.definition_port = def["port"];
+            if (network && network->contains("definition_feed")) {
+                const auto def = network->operator[]("definition_feed");
+                if (def && def->contains("ip"))
+                    config.network.definition_ip = def->operator[]("ip")->as_string();
+                if (def && def->contains("port"))
+                    config.network.definition_port = static_cast<int>(*def->operator[]("port"));
             }
         }
-        
+
         // Load market data config
-        if (j.contains("market_data")) {
-            const auto& md = j["market_data"];
-            if (md.contains("market_mode")) config.market_mode = md["market_mode"];
-            if (md.contains("updates_per_second")) config.updates_per_second = md["updates_per_second"];
-            if (md.contains("snapshot_interval_seconds")) config.snapshot_interval_seconds = md["snapshot_interval_seconds"];
-            if (md.contains("heartbeat_interval_seconds")) config.heartbeat_interval_seconds = md["heartbeat_interval_seconds"];
-            if (md.contains("max_book_depth")) config.max_book_depth = md["max_book_depth"];
+        if (j->contains("market_data")) {
+            const auto md = j->operator[]("market_data");
+            if (md && md->contains("market_mode"))
+                config.market_mode = md->operator[]("market_mode")->as_string();
+            if (md && md->contains("updates_per_second"))
+                config.updates_per_second = static_cast<int>(*md->operator[]("updates_per_second"));
+            if (md && md->contains("snapshot_interval_seconds"))
+                config.snapshot_interval_seconds = static_cast<int>(*md->operator[]("snapshot_interval_seconds"));
+            if (md && md->contains("heartbeat_interval_seconds"))
+                config.heartbeat_interval_seconds = static_cast<int>(*md->operator[]("heartbeat_interval_seconds"));
+            if (md && md->contains("max_book_depth"))
+                config.max_book_depth = static_cast<int>(*md->operator[]("max_book_depth"));
         }
-        
+
         // Load protocol-specific config
-        if (j.contains("protocols") && j["protocols"].contains(config.protocol)) {
-            const auto& protocol = j["protocols"][config.protocol];
-            if (protocol.contains("schema_id")) config.protocol_config.schema_id = protocol["schema_id"];
-            if (protocol.contains("schema_version")) config.protocol_config.schema_version = protocol["schema_version"];
-            if (protocol.contains("channel_id")) config.protocol_config.channel_id = protocol["channel_id"];
-            if (protocol.contains("application_id")) config.protocol_config.application_id = protocol["application_id"];
-            if (protocol.contains("batch_size")) config.protocol_config.batch_size = protocol["batch_size"];
-        }
-        
-        // Load instruments
-        if (j.contains("instruments")) {
-            for (const auto& inst_json : j["instruments"]) {
-                if (!inst_json.contains("enabled") || !inst_json["enabled"]) {
-                    continue;
-                }
-                
-                int64_t id = inst_json["instrument_id"];
-                std::string symbol = inst_json["symbol"];
-                std::string type = inst_json.value("type", "fx_spot");
-                
-                std::shared_ptr<market_core::Instrument> instrument;
-                
-                if (type == "fx_spot") {
-                    auto fx = std::make_shared<market_core::FXInstrument>(id, symbol);
-                    fx->description = inst_json.value("description", symbol);
-                    fx->base_currency = inst_json.value("base_currency", "USD");
-                    fx->quote_currency = inst_json.value("quote_currency", "EUR");
-                    fx->tick_size = inst_json.value("tick_size", 0.00001);
-                    fx->contract_size = inst_json.value("contract_size", 100000.0);
-                    instrument = fx;
-                } else if (type == "futures") {
-                    auto futures = std::make_shared<market_core::FuturesInstrument>(id, symbol);
-                    futures->description = inst_json.value("description", symbol);
-                    futures->underlying = inst_json.value("underlying", "");
-                    futures->tick_size = inst_json.value("tick_size", 0.01);
-                    futures->multiplier = inst_json.value("multiplier", 1.0);
-                    futures->contract_size = inst_json.value("contract_size", 1.0);
-                    if (inst_json.contains("maturity_date")) {
-                        futures->maturity_date = inst_json["maturity_date"];
-                    }
-                    if (inst_json.contains("initial_margin")) {
-                        futures->initial_margin = inst_json["initial_margin"];
-                    }
-                    if (inst_json.contains("maintenance_margin")) {
-                        futures->maintenance_margin = inst_json["maintenance_margin"];
-                    }
-                    instrument = futures;
-                } else {
-                    // Generic instrument
-                    instrument = std::make_shared<market_core::Instrument>(id, symbol);
-                    instrument->description = inst_json.value("description", symbol);
-                }
-                
-                // Set common properties
-                instrument->set_property("initial_price", inst_json.value("initial_price", 1.0));
-                instrument->set_property("initial_spread", inst_json.value("initial_spread", 0.001));
-                instrument->set_property("price_decimals", static_cast<int64_t>(inst_json.value("price_decimals", 5)));
-                
-                // Set external ID for protocol mapping
-                std::string ext_id_key = config.protocol == "cme" ? "CME_SECURITY_ID" : 
-                                       config.protocol == "reuters" ? "REUTERS_RIC" : "UTP_SECURITY_ID";
-                instrument->external_ids[ext_id_key] = std::to_string(id);
-                
-                config.instruments.push_back(instrument);
+        if (j->contains("protocols")) {
+            const auto protocols = j->operator[]("protocols");
+            if (protocols && protocols->contains(config.protocol)) {
+                const auto protocol = protocols->operator[](config.protocol);
+                if (protocol && protocol->contains("schema_id"))
+                    config.protocol_config.schema_id = static_cast<int>(*protocol->operator[]("schema_id"));
+                if (protocol && protocol->contains("schema_version"))
+                    config.protocol_config.schema_version = static_cast<int>(*protocol->operator[]("schema_version"));
+                if (protocol && protocol->contains("channel_id"))
+                    config.protocol_config.channel_id = static_cast<int>(*protocol->operator[]("channel_id"));
+                if (protocol && protocol->contains("application_id"))
+                    config.protocol_config.application_id = static_cast<int>(*protocol->operator[]("application_id"));
+                if (protocol && protocol->contains("batch_size"))
+                    config.protocol_config.batch_size = static_cast<int>(*protocol->operator[]("batch_size"));
             }
         }
-        
+
+        // Load instruments
+        if (j->contains("instruments")) {
+            const auto instruments_array = j->operator[]("instruments");
+            if (instruments_array && instruments_array->is_array()) {
+                const auto& arr = instruments_array->as_array();
+                for (const auto& inst_ptr : arr) {
+                    if (!inst_ptr)
+                        continue;
+
+                    bool enabled = true;
+                    if (inst_ptr->contains("enabled")) {
+                        enabled = static_cast<bool>(*inst_ptr->operator[]("enabled"));
+                    }
+                    if (!enabled)
+                        continue;
+
+                    int64_t id = static_cast<long>(*inst_ptr->operator[]("instrument_id"));
+                    std::string symbol = inst_ptr->operator[]("symbol")->as_string();
+                    std::string type = "fx_spot";
+                    if (inst_ptr->contains("type")) {
+                        type = inst_ptr->operator[]("type")->as_string();
+                    }
+
+                    std::shared_ptr<market_core::Instrument> instrument;
+
+                    if (type == "fx_spot") {
+                        auto fx = std::make_shared<market_core::FXSpotInstrument>(id, symbol);
+                        fx->description = inst_ptr->contains("description") ? inst_ptr->operator[]("description")->as_string() : symbol;
+                        fx->base_currency = inst_ptr->contains("base_currency") ? inst_ptr->operator[]("base_currency")->as_string() : "USD";
+                        fx->quote_currency = inst_ptr->contains("quote_currency") ? inst_ptr->operator[]("quote_currency")->as_string() : "EUR";
+                        fx->tick_size = inst_ptr->contains("tick_size") ? static_cast<double>(*inst_ptr->operator[]("tick_size")) : 0.00001;
+                        fx->standard_lot_size = inst_ptr->contains("contract_size") ? static_cast<double>(*inst_ptr->operator[]("contract_size")) : 100000.0;
+                        instrument = fx;
+                    } else if (type == "futures") {
+                        auto futures = std::make_shared<market_core::FuturesInstrument>(id, symbol);
+                        futures->description = inst_ptr->contains("description") ? inst_ptr->operator[]("description")->as_string() : symbol;
+                        futures->underlying = inst_ptr->contains("underlying") ? inst_ptr->operator[]("underlying")->as_string() : "";
+                        futures->tick_size = inst_ptr->contains("tick_size") ? static_cast<double>(*inst_ptr->operator[]("tick_size")) : 0.01;
+                        futures->multiplier = inst_ptr->contains("multiplier") ? static_cast<double>(*inst_ptr->operator[]("multiplier")) : 1.0;
+                        futures->contract_size = inst_ptr->contains("contract_size") ? static_cast<double>(*inst_ptr->operator[]("contract_size")) : 1.0;
+                        if (inst_ptr->contains("maturity_date")) {
+                            futures->maturity_date = inst_ptr->operator[]("maturity_date")->as_string();
+                        }
+                        if (inst_ptr->contains("initial_margin")) {
+                            futures->initial_margin = static_cast<double>(*inst_ptr->operator[]("initial_margin"));
+                        }
+                        if (inst_ptr->contains("maintenance_margin")) {
+                            futures->maintenance_margin = static_cast<double>(*inst_ptr->operator[]("maintenance_margin"));
+                        }
+                        instrument = futures;
+                    } else {
+                        // Generic instrument
+                        instrument = std::make_shared<market_core::Instrument>(id, symbol, market_core::InstrumentType::UNKNOWN);
+                        instrument->description = inst_ptr->contains("description") ? inst_ptr->operator[]("description")->as_string() : symbol;
+                    }
+
+                    // Set common properties
+                    double initial_price = inst_ptr->contains("initial_price") ? static_cast<double>(*inst_ptr->operator[]("initial_price")) : 1.0;
+                    double initial_spread = inst_ptr->contains("initial_spread") ? static_cast<double>(*inst_ptr->operator[]("initial_spread")) : 0.001;
+                    int64_t price_decimals = inst_ptr->contains("price_decimals") ? static_cast<long>(*inst_ptr->operator[]("price_decimals")) : 5;
+
+                    instrument->set_property("initial_price", initial_price);
+                    instrument->set_property("initial_spread", initial_spread);
+                    instrument->set_property("price_decimals", price_decimals);
+
+                    // Set external ID for protocol mapping
+                    std::string ext_id_key = config.protocol == "cme" ? "CME_SECURITY_ID" : config.protocol == "reuters" ? "REUTERS_RIC"
+                                                                                                                         : "UTP_SECURITY_ID";
+                    instrument->external_ids[ext_id_key] = std::to_string(id);
+
+                    config.instruments.push_back(instrument);
+                }
+            }
+        }
+
         // Add default instruments if none configured
         if (config.instruments.empty()) {
-            auto eurusd = std::make_shared<market_core::FXInstrument>(1, "EURUSD");
+            auto eurusd = std::make_shared<market_core::FXSpotInstrument>(1, "EURUSD");
             eurusd->description = "EUR/USD Spot FX";
             eurusd->base_currency = "EUR";
             eurusd->quote_currency = "USD";
             eurusd->tick_size = 0.00001;
-            eurusd->contract_size = 100000.0;
+            eurusd->standard_lot_size = 100000.0;
             eurusd->set_property("initial_price", 1.0850);
             eurusd->set_property("initial_spread", 0.00002);
             eurusd->set_property("price_decimals", int64_t(5));
             config.instruments.push_back(eurusd);
         }
-        
+
     } catch (const std::exception& e) {
         std::cerr << "Error loading config: " << e.what() << "\nUsing default configuration\n";
     }
-    
+
     return config;
 }
 
-std::shared_ptr<market_protocols::ProtocolAdapter> create_protocol_adapter(
+std::shared_ptr<market_protocols::IProtocolAdapter> create_protocol_adapter(
     const std::string& protocol, const ServerConfig::ProtocolConfig& config)
 {
     if (protocol == "cme") {
         auto adapter = std::make_shared<cme_protocol::CMEProtocolAdapter>();
-        adapter->set_channel_id(config.channel_id);
-        adapter->set_batch_size(config.batch_size);
-        return adapter;
-    } else if (protocol == "reuters") {
-        auto adapter = std::make_shared<reuters_protocol::ReutersProtocolAdapter>();
-        // Configure Reuters-specific settings
-        return adapter;
-    } else if (protocol == "utp") {
-        auto adapter = std::make_shared<utp_protocol::UTPProtocolAdapter>();
-        adapter->set_channel_id(config.channel_id);
-        adapter->set_batch_size(config.batch_size);
+        // CME configuration would be set during initialization
         return adapter;
     } else {
-        throw std::runtime_error("Unsupported protocol: " + protocol);
+        throw std::runtime_error("Only CME protocol is currently supported in unified server. Protocol requested: " + protocol);
     }
 }
 
 market_core::MarketMode string_to_market_mode(const std::string& mode_str)
 {
-    if (mode_str == "fast") return market_core::MarketMode::FAST;
-    if (mode_str == "volatile") return market_core::MarketMode::VOLATILE;
-    if (mode_str == "thin") return market_core::MarketMode::THIN;
-    if (mode_str == "trending") return market_core::MarketMode::TRENDING;
-    if (mode_str == "stressed") return market_core::MarketMode::STRESSED;
+    if (mode_str == "fast")
+        return market_core::MarketMode::FAST;
+    if (mode_str == "volatile")
+        return market_core::MarketMode::VOLATILE;
+    if (mode_str == "thin")
+        return market_core::MarketMode::THIN;
+    if (mode_str == "trending")
+        return market_core::MarketMode::TRENDING;
+    if (mode_str == "stressed")
+        return market_core::MarketMode::STRESSED;
     return market_core::MarketMode::NORMAL;
 }
 
@@ -305,7 +335,7 @@ int main(int argc, char* argv[])
 
     // Load configuration
     ServerConfig config = load_config(config_file);
-    
+
     // Apply command line overrides
     if (!protocol_override.empty()) {
         config.protocol = protocol_override;
@@ -335,7 +365,7 @@ int main(int argc, char* argv[])
         for (auto& instrument : config.instruments) {
             book_manager->add_instrument(instrument);
             book_manager->create_order_book(instrument->instrument_id);
-            std::cout << "Added instrument: " << instrument->primary_symbol 
+            std::cout << "Added instrument: " << instrument->primary_symbol
                       << " (ID: " << instrument->instrument_id << ")\n";
         }
 
@@ -349,9 +379,9 @@ int main(int argc, char* argv[])
         auto incremental_adapter = create_protocol_adapter(config.protocol, config.protocol_config);
         auto snapshot_adapter = create_protocol_adapter(config.protocol, config.protocol_config);
 
-        auto inc_transport = std::make_shared<market_protocols::UDPMulticastTransport>(
+        auto inc_transport = std::make_shared<market_protocols::UDPTransport>(
             config.network.incremental_ip, config.network.incremental_port);
-        auto snap_transport = std::make_shared<market_protocols::UDPMulticastTransport>(
+        auto snap_transport = std::make_shared<market_protocols::UDPTransport>(
             config.network.snapshot_ip, config.network.snapshot_port);
 
         if (!inc_transport->initialize() || !snap_transport->initialize()) {
@@ -363,8 +393,8 @@ int main(int argc, char* argv[])
         snapshot_adapter->set_transport(snap_transport);
 
         // 5. Create event listeners (if using CME protocol)
-        std::shared_ptr<market_core::MarketDataListener> inc_listener, snap_listener;
-        
+        std::shared_ptr<market_core::IMarketEventListener> inc_listener, snap_listener;
+
         if (config.protocol == "cme") {
             inc_listener = std::make_shared<cme_protocol::CMEEventListener>(
                 book_manager, std::dynamic_pointer_cast<cme_protocol::CMEProtocolAdapter>(incremental_adapter));
@@ -442,7 +472,8 @@ int main(int argc, char* argv[])
             if (loop_start - stats_timer >= stats_interval) {
                 const auto& stats = market_generator->get_statistics();
                 auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-                    loop_start - stats.start_time).count();
+                    loop_start - stats.start_time)
+                                   .count();
 
                 std::cout << "Stats: " << stats.updates_generated << " updates, "
                           << stats.trades_generated << " trades, "

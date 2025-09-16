@@ -182,19 +182,7 @@ target_include_directories(unified_server PRIVATE
     ${PROTOCOLS_UTP_INCLUDE_DIR}
 )
 
-# Find nlohmann/json for configuration parsing
-find_package(nlohmann_json QUIET)
-if(NOT nlohmann_json_FOUND)
-    # Try to find it as a header-only library
-    find_path(NLOHMANN_JSON_INCLUDE_DIR NAMES nlohmann/json.hpp)
-    if(NLOHMANN_JSON_INCLUDE_DIR)
-        target_include_directories(unified_server PRIVATE ${NLOHMANN_JSON_INCLUDE_DIR})
-    else()
-        message(STATUS "nlohmann/json not found - unified server may not compile")
-    endif()
-else()
-    target_link_libraries(unified_server nlohmann_json::nlohmann_json)
-endif()
+# Native JSON implementation - no external dependencies needed
 
 target_link_libraries(unified_server
     cme_protocol

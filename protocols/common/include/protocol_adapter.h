@@ -66,6 +66,9 @@ public:
     // Sequence management (if needed by protocol)
     virtual uint32_t get_next_sequence() { return 0; }
     virtual void reset_sequence() { }
+
+    // Heartbeat support
+    virtual void send_heartbeat() { }
 };
 
 // Message transport interface
